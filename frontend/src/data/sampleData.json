@@ -1,0 +1,20 @@
+{
+  "client1": {
+    "name": "John Doe",
+    "email": "john.doe@example.com",
+    "age": 30,
+    "phone": "+1-555-0123"
+  },
+  "client2": {
+    "name": "Jane Smith",
+    "email": "jane.smith@example.com",
+    "age": 25,
+    "phone": "+1-555-0124"
+  },
+  "client3": {
+    "name": "Bob Johnson",
+    "email": "bob.johnson@example.com",
+    "age": 35,
+    "phone": "+1-555-0125"
+  }
+} 

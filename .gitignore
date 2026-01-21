@@ -1,0 +1,63 @@
+# Python - Backend
+backend/__pycache__/
+backend/*.py[cod]
+backend/*$py.class
+backend/*.so
+
+# Backend Virtual environments
+backend/env/
+backend/venv/
+backend/.venv/
+backend/ENV/
+
+# Backend specific
+backend/instance/
+backend/.pytest_cache/
+backend/.coverage
+backend/htmlcov/
+
+# Frontend - Next.js
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/dist/
+frontend/build/
+
+# Frontend build
+frontend/npm-debug.log
+frontend/yarn-debug.log
+frontend/yarn-error.log
+frontend/lerna-debug.log
+frontend/.pnpm-debug.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.sublime-project
+.sublime-workspace
+
+# Environment variables (root level)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# OS
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+*~
+
+# Logs
+*.log
+logs/
