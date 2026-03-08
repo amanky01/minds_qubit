@@ -18,7 +18,7 @@ class GeminiService:
             logger.warning("GEMINI_API_KEY not set. Gemini service will not work.")
         else:
             try:
-                self.model = genai.GenerativeModel('gemini-pro')
+                self.model = genai.GenerativeModel(settings.GEMINI_MODEL)
             except Exception as e:
                 logger.error(f"Failed to initialize Gemini model: {e}")
                 self.model = None

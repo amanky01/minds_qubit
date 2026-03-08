@@ -228,7 +228,7 @@ async def oauth_google_callback(code: str, request: Request):
             )
             
             # Redirect to frontend with tokens
-            frontend_url = settings.CORS_ORIGINS[0] if settings.CORS_ORIGINS else "http://localhost:3000"
+            frontend_url = settings.cors_origins_list[0] if settings.cors_origins_list else "http://localhost:3000"
             redirect_url = f"{frontend_url}/auth/callback?access_token={result['access_token']}&refresh_token={result['refresh_token']}"
             
             return RedirectResponse(url=redirect_url)
@@ -348,7 +348,7 @@ async def oauth_github_callback(code: str, request: Request):
             )
             
             # Redirect to frontend with tokens
-            frontend_url = settings.CORS_ORIGINS[0] if settings.CORS_ORIGINS else "http://localhost:3000"
+            frontend_url = settings.cors_origins_list[0] if settings.cors_origins_list else "http://localhost:3000"
             redirect_url = f"{frontend_url}/auth/callback?access_token={result['access_token']}&refresh_token={result['refresh_token']}"
             
             return RedirectResponse(url=redirect_url)

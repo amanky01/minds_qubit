@@ -9,22 +9,12 @@ FastAPI backend for the AI Agents Platform with modular agent architecture.
 pip install -r requirements.txt
 ```
 
-2. Create a `.env` file in the backend directory with the following variables:
+2. Copy `.env.example` to `.env` in the backend directory and set variables. All config is read from env (see `core/config.py`). Example:
+```bash
+cp .env.example .env
+# Edit .env with your values
 ```
-MONGODB_URL=mongodb://localhost:27017
-DATABASE_NAME=ai_agents_platform
-JWT_SECRET_KEY=your-secret-key-change-in-production
-JWT_ALGORITHM=HS256
-JWT_ACCESS_TOKEN_EXPIRE_MINUTES=30
-JWT_REFRESH_TOKEN_EXPIRE_DAYS=7
-GEMINI_API_KEY=your-gemini-api-key
-GOOGLE_CLIENT_ID=your-google-client-id
-GOOGLE_CLIENT_SECRET=your-google-client-secret
-GITHUB_CLIENT_ID=your-github-client-id
-GITHUB_CLIENT_SECRET=your-github-client-secret
-CORS_ORIGINS=http://localhost:3000
-OAUTH_REDIRECT_URL=http://localhost:8000/api/v1/auth/oauth
-```
+Optional env vars: `ENV_FILE` (default `.env`), `MONGODB_URL`, `DATABASE_NAME`, `JWT_*`, `GEMINI_API_KEY`, `GEMINI_MODEL` (default `gemini-1.5-flash`), `GOOGLE_*`, `GITHUB_*`, `CORS_ORIGINS`, `OAUTH_REDIRECT_URL`, `HOST`, `PORT`.
 
 3. Make sure MongoDB is running
 

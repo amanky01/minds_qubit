@@ -29,8 +29,17 @@ export default function Login() {
       const redirectTo = router.query.redirect as string || "/";
       router.push(redirectTo);
     } catch (err: any) {
-      // Use the formatted error message from authService
-      setError(err?.message || "Login failed. Please check your credentials and ensure the backend is running.");
+      // Use the formatted error message from authService and handle auth statuses
+      const status = err?.status;
+      if (status === 401) {
+        setError(err?.message || "Invalid credentials. Please try again.");
+      } else if (status === 403) {
+        setError(err?.message || "You are not authorized to access this resource.");
+      } else if (!err || !err.message) {
+        setError("Login failed. Please check your credentials and ensure the backend is running.");
+      } else {
+        setError(err.message);
+      }
     } finally {
       setLoading(false);
     }

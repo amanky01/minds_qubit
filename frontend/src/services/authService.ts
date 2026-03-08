@@ -25,28 +25,65 @@ export interface AuthResponse {
   user?: User;
 }
 
-const getAuthErrorMessage = (error: any): string => {
-  if (!error.response) {
-    // Network error - backend not reachable
-    return "Unable to connect to the server. Please ensure the backend is running on http://localhost:8000";
+type ApiError = {
+  message: string;
+  status?: number;
+  original?: any;
+};
+
+const getAuthErrorMessage = (error: any): ApiError => {
+  if (!error || !error.response) {
+    return {
+      message: "Unable to connect to the server. Please ensure the backend is running on http://localhost:8000",
+      status: undefined,
+      original: error,
+    };
   }
-  
+
   const status = error.response?.status;
-  const detail = error.response?.data?.detail || error.response?.data?.message;
-  
+  // backend may use `detail`, `message`, or nested errors
+  const detail =
+    error.response?.data?.detail ||
+    error.response?.data?.message ||
+    (typeof error.response?.data === "string" ? error.response.data : undefined);
+
   if (status === 401) {
-    return detail || "Invalid email or password. Please check your credentials and try again.";
+    return {
+      message: detail || "Invalid email or password. Please check your credentials and try again.",
+      status,
+      original: error,
+    };
   }
-  
+
+  if (status === 403) {
+    return {
+      message: detail || "You are not authorized to perform this action.",
+      status,
+      original: error,
+    };
+  }
+
   if (status === 500) {
-    return "Server error occurred. This might be due to database connection issues. Please try again later.";
+    return {
+      message: "Server error occurred. Please try again later.",
+      status,
+      original: error,
+    };
   }
-  
+
   if (status === 400) {
-    return detail || "Invalid request. Please check your input and try again.";
+    return {
+      message: detail || "Invalid request. Please check your input and try again.",
+      status,
+      original: error,
+    };
   }
-  
-  return detail || "An unexpected error occurred. Please try again.";
+
+  return {
+    message: detail || "An unexpected error occurred. Please try again.",
+    status,
+    original: error,
+  };
 };
 
 export const authService = {
@@ -63,10 +100,11 @@ export const authService = {
       
       return data;
     } catch (error: any) {
-      const message = getAuthErrorMessage(error);
-      console.error("Login error:", error);
-      const authError = new Error(message);
-      (authError as any).response = error.response;
+      const apiError = getAuthErrorMessage(error);
+      console.debug("Login error:", apiError.original || error);
+      const authError = new Error(apiError.message) as Error & { status?: number; original?: any };
+      authError.status = apiError.status;
+      authError.original = apiError.original;
       throw authError;
     }
   },
@@ -84,10 +122,11 @@ export const authService = {
       
       return authData;
     } catch (error: any) {
-      const message = getAuthErrorMessage(error);
-      console.error("Registration error:", error);
-      const authError = new Error(message);
-      (authError as any).response = error.response;
+      const apiError = getAuthErrorMessage(error);
+      console.debug("Registration error:", apiError.original || error);
+      const authError = new Error(apiError.message) as Error & { status?: number; original?: any };
+      authError.status = apiError.status;
+      authError.original = apiError.original;
       throw authError;
     }
   },
