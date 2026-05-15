@@ -4,10 +4,10 @@ FastAPI backend for the AI Agents Platform with modular agent architecture.
 
 ## Setup
 
-1. Install dependencies (includes **motor** for MongoDB). **Use a virtual environment** — required on macOS/Homebrew Python (`externally-managed-environment`; global `pip install` is blocked).
+1. Install dependencies (includes **motor** for MongoDB). **Use a virtual environment** — required on macOS/Homebrew Python (`externally-managed-environment`; global `pip install` is blocked). Use **Python 3.10–3.12** (not 3.14): `pydantic-core` has prebuilt wheels for those versions; 3.14 triggers a Rust build that fails on Render.
 ```bash
 cd backend
-python3 -m venv .venv
+python3.10 -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
@@ -65,6 +65,19 @@ Or:
 - `POST /api/v1/auth/login` - Login user
 - `POST /api/v1/auth/refresh` - Refresh access token
 - `GET /api/v1/auth/me` - Get current user (requires auth)
+
+## Deploy on Render
+
+Render **does not** read `render.yaml` for services you create in the dashboard (that file is only for [Blueprints](https://render.com/docs/blueprint-spec)). Configure everything in the service **Settings** and **Environment**:
+
+| Setting | Value |
+|--------|--------|
+| **Root Directory** | `backend` |
+| **Build Command** | `pip install -r requirements.txt` |
+| **Start Command** | `uvicorn main:app --host 0.0.0.0 --port $PORT` |
+| **Environment → PYTHON_VERSION** | `3.10.18` |
+
+Also commit `backend/runtime.txt` (`python-3.10.18`). If the build log still shows `python3.14`, set **PYTHON_VERSION** in the dashboard (that overrides the default). Then **Manual Deploy → Clear build cache & deploy**.
 
 ## Database
 
