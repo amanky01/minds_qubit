@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import Head from "next/head";
 import { useAuth } from "@/contexts/AuthContext";
+import config from "@/network/config/config";
 import styles from "@/styles/Auth.module.css";
 
 export default function Signup() {
@@ -52,11 +53,11 @@ export default function Signup() {
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000/"}api/v1/auth/oauth/google`;
+    window.location.href = `${config.API_BASE_URL}api/v1/auth/oauth/google`;
   };
 
   const handleGitHubLogin = () => {
-    window.location.href = `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000/"}api/v1/auth/oauth/github`;
+    window.location.href = `${config.API_BASE_URL}api/v1/auth/oauth/github`;
   };
 
   return (

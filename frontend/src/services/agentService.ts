@@ -1,5 +1,6 @@
 import { isAxiosError } from "axios";
 import api from "@/network/core/axiosInstance";
+import config from "@/network/config/config";
 
 export interface Agent {
   id: string;
@@ -34,7 +35,7 @@ const getErrorMessage = (error: unknown): string => {
         code === "ERR_NETWORK" ||
         msg?.includes("Network Error")
       ) {
-        return "Unable to connect to the server. Please ensure the backend is running on http://localhost:8000";
+        return `Unable to connect to the server. Please ensure the backend is running at ${config.API_BASE_URL}`;
       }
       return "Network error. Please check your connection and try again.";
     }

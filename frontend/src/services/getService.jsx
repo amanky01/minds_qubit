@@ -36,7 +36,7 @@ export const getClients = async () => {
 
     // Provide more specific error information
     if (error.code === 'ECONNREFUSED') {
-      throw new Error('Cannot connect to backend server. Please ensure your FastAPI server is running on http://localhost:8000');
+      throw new Error(`Cannot connect to backend server. Please ensure your FastAPI server is running at ${config.API_BASE_URL}`);
     } else if (error.response) {
       // Server responded with error status
       throw new Error(`Server error: ${error.response.status} - ${error.response.data?.detail || error.response.statusText}`);
@@ -94,7 +94,7 @@ export const createClient = async (clientData) => {
 
     // Provide more specific error information
     if (error.code === 'ECONNREFUSED') {
-      throw new Error('Cannot connect to backend server. Please ensure your FastAPI server is running on http://localhost:8000');
+      throw new Error(`Cannot connect to backend server. Please ensure your FastAPI server is running at ${config.API_BASE_URL}`);
     } else if (error.response) {
       // Server responded with error status
       throw new Error(`Server error: ${error.response.status} - ${error.response.data?.detail || error.response.statusText}`);

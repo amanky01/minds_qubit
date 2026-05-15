@@ -15,9 +15,15 @@ Make sure your FastAPI backend is running on `http://localhost:8000`. The backen
 - `DELETE /delete/{client_id}` - Delete client
 
 ### 2. Environment Configuration
-The API base URL is configured in `src/network/config/config.js`. By default, it points to `http://localhost:8000`.
+The API base URL is read from `NEXT_PUBLIC_API_BASE_URL` in `src/network/config/config.js` (default: `http://127.0.0.1:8000/`).
 
-To use a different URL, set the `API_BASE_URL` environment variable or modify the config file.
+Copy `.env.example` to `.env` and set your backend URL:
+
+```bash
+NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000/
+```
+
+For production (e.g. Vercel), set the same variable in your hosting dashboard.
 
 ## API Functions
 

@@ -1,5 +1,6 @@
 import { isAxiosError } from "axios";
 import api from "@/network/core/axiosInstance";
+import config from "@/network/config/config";
 
 export interface User {
   id: string;
@@ -50,7 +51,7 @@ const getAuthErrorMessage = (error: unknown): ApiError => {
   if (!isAxiosError(error) || !error.response) {
     return {
       message:
-        "Unable to connect to the server. Please ensure the backend is running on http://localhost:8000",
+        `Unable to connect to the server. Please ensure the backend is running at ${config.API_BASE_URL}`,
       status: undefined,
       original: error,
     };

@@ -6,6 +6,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { agentService, Agent } from "@/services/agentService";
 import { authService } from "@/services/authService";
 import { agentUIConfig, defaultAgentUIConfig } from "@/config/agentUIConfig";
+import config from "@/network/config/config";
 import styles from "@/styles/Agent.module.css";
 
 export default function AgentPage() {
@@ -50,7 +51,7 @@ export default function AgentPage() {
       if (!token) throw new Error("Not authenticated");
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000/"}api/v1/agents/${agent.id}/execute`,
+        `${config.API_BASE_URL}api/v1/agents/${agent.id}/execute`,
         {
           method: "POST",
           headers: {
