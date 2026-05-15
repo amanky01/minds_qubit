@@ -4,10 +4,14 @@ FastAPI backend for the AI Agents Platform with modular agent architecture.
 
 ## Setup
 
-1. Install dependencies:
+1. Install dependencies (includes **motor** for MongoDB). **Use a virtual environment** — required on macOS/Homebrew Python (`externally-managed-environment`; global `pip install` is blocked).
 ```bash
+cd backend
+python3 -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
+Always start the app with **that same environment** (activated shell, or `backend/.venv/bin/python` / `backend/.venv/bin/uvicorn`). If you still see `No module named 'motor'`, you are not using the venv’s Python.
 
 2. Copy `.env.example` to `.env` in the backend directory and set variables. All config is read from env (see `core/config.py`). Example:
 ```bash
@@ -18,16 +22,19 @@ Optional env vars: `ENV_FILE` (default `.env`), `MONGODB_URL`, `DATABASE_NAME`, 
 
 3. Make sure MongoDB is running
 
-4. Run the server:
+4. Run the server (from `backend`, with venv active **or** use paths below):
 ```bash
-cd backend
+source .venv/bin/activate
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
-
-Or:
+Without activating the venv:
 ```bash
 cd backend
-python main.py
+.venv/bin/uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+Or:
+```bash
+.venv/bin/python main.py
 ```
 
 ## Architecture

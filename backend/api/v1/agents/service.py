@@ -1,90 +1,102 @@
-from typing import List, Optional
-from agents import get_agent, get_all_agents, get_agents_by_category, get_all_categories
-from agents.base import BaseAgent
-from services.agent_executor import agent_executor
-from core.database import get_database
-from bson import ObjectId
-from models.agent import AgentInDB
-from datetime import datetime
+"""
+Agent API service layer.
+
+Thin orchestration layer between the HTTP router and the domain services
+(agent registry, executor, database).  Business logic lives in the domain
+services; this layer only translates between HTTP concepts and domain calls.
+"""
+
+from __future__ import annotations
+
 import logging
+from typing import List, Optional
+
+from agents import get_agent, get_agents_by_category, get_all_agents, get_all_categories
+from agents.base import BaseAgent
+from core.database import db_manager
+from services.agent_executor import agent_executor
 
 logger = logging.getLogger(__name__)
 
 
 class AgentService:
-    """Service for agent operations"""
-    
+
+    # ── Agent registry ─────────────────────────────────────────────────────
+
     async def get_all_agents(self) -> List[BaseAgent]:
-        """Get all available agents"""
         return get_all_agents()
-    
+
     async def get_agent_by_id(self, agent_id: str) -> Optional[BaseAgent]:
-        """Get agent by ID"""
         return get_agent(agent_id)
-    
+
     async def get_agents_by_category(self, category: str) -> List[BaseAgent]:
-        """Get agents by category"""
         return get_agents_by_category(category)
-    
+
     async def get_all_categories(self) -> List[str]:
-        """Get all categories"""
         return get_all_categories()
-    
+
+    # ── Execution ──────────────────────────────────────────────────────────
+
     async def execute_agent(
         self,
         agent_id: str,
         user_message: str,
         user_id: str,
-        conversation_id: Optional[str] = None
+        plan_id: str,
+        conversation_id: Optional[str] = None,
     ) -> dict:
-        """Execute an agent interaction"""
+        """
+        Execute one agent turn.
+        Raises ValueError if the agent_id is not registered.
+        """
         agent = get_agent(agent_id)
         if not agent:
-            raise ValueError(f"Agent {agent_id} not found")
-        
-        return await agent_executor.execute_agent(
+            raise ValueError(f"Agent '{agent_id}' not found")
+
+        return await agent_executor.execute(
             agent=agent,
             user_message=user_message,
             user_id=user_id,
-            conversation_id=conversation_id
+            plan_id=plan_id,
+            conversation_id=conversation_id,
         )
-    
+
+    # ── Conversation history ───────────────────────────────────────────────
+
     async def get_user_conversations(
         self,
         user_id: str,
-        agent_id: Optional[str] = None
+        agent_id: str,
     ) -> List[dict]:
-        """Get user's conversations with agents"""
-        db = get_database()
-        conversations_collection = db["agent_conversations"]
-        
-        query = {"user_id": user_id}
-        if agent_id:
-            query["agent_id"] = agent_id
-        
-        cursor = conversations_collection.find(query).sort("updated_at", -1)
-        conversations = await cursor.to_list(length=100)
-        
-        result = []
-        for conv in conversations:
-            result.append({
-                "id": str(conv["_id"]),
-                "user_id": conv["user_id"],
-                "agent_id": conv["agent_id"],
+        """
+        Return conversations for a specific (user, agent) pair,
+        sorted by most-recently-updated first.
+        """
+        col = db_manager.agent(agent_id)["conversations"]
+        cursor = col.find({"user_id": user_id}).sort("updated_at", -1)
+        docs = await cursor.to_list(length=100)
+
+        return [
+            {
+                "id":         str(doc["_id"]),
+                "user_id":    doc["user_id"],
+                "agent_id":   doc["agent_id"],
+                "title":      doc.get("title"),
                 "messages": [
                     {
-                        "role": msg["role"],
-                        "content": msg["content"],
-                        "timestamp": msg.get("timestamp", conv.get("created_at")).isoformat()
+                        "role":      msg["role"],
+                        "content":   msg["content"],
+                        "timestamp": msg["timestamp"].isoformat(),
                     }
-                    for msg in conv.get("messages", [])
+                    for msg in doc.get("messages", [])
                 ],
-                "created_at": conv.get("created_at", datetime.utcnow()).isoformat(),
-                "updated_at": conv.get("updated_at", datetime.utcnow()).isoformat()
-            })
-        
-        return result
+                "created_at": doc["created_at"].isoformat(),
+                "updated_at": doc["updated_at"].isoformat(),
+            }
+            for doc in docs
+        ]
 
 
-# Global instance
+# Module-level singleton
 agent_service = AgentService()
+

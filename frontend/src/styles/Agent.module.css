@@ -1,57 +1,233 @@
+/* ═══════════════════════════════════════════════════════════════
+   Agent Chat Page — Dark futuristic theme (matches site globals)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Page shell ─────────────────────────────────────────────── */
 .container {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #f7fafc;
+  background: var(--background);
+  position: relative;
+  overflow: hidden;
 }
 
-.header {
-  background: white;
-  padding: 1.5rem 2rem;
-  border-bottom: 1px solid #e2e8f0;
+.container::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 80%, rgba(0, 212, 255, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(124, 58, 237, 0.03) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Loading screen ─────────────────────────────────────────── */
+.loadingScreen {
+  flex: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 1.5rem;
+  justify-content: center;
+  gap: 1rem;
+  color: var(--foreground-muted);
+  animation: fadeInUp 0.5s ease-out;
 }
 
+/* ════════════════════════════════════════════════════════════════
+   BANNER
+   ════════════════════════════════════════════════════════════════ */
+.banner {
+  position: relative;
+  padding: 2.5rem 2rem 0 2rem;
+  overflow: hidden;
+  border-bottom: 1px solid var(--glass-border);
+  z-index: 1;
+}
+
+/* Floating decorative emoji icons */
+.floatIcon {
+  position: absolute;
+  font-size: 3rem;
+  opacity: 0.06;
+  pointer-events: none;
+  user-select: none;
+  animation: floatDrift 8s ease-in-out infinite;
+}
+
+.fi1 {
+  top: 10%;
+  right: 8%;
+  animation-delay: 0s;
+  font-size: 4rem;
+}
+
+.fi2 {
+  top: 50%;
+  right: 18%;
+  animation-delay: 2.5s;
+  font-size: 5rem;
+}
+
+.fi3 {
+  bottom: 5%;
+  right: 4%;
+  animation-delay: 5s;
+  font-size: 3.5rem;
+}
+
+@keyframes floatDrift {
+
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  33% {
+    transform: translateY(-12px) rotate(5deg);
+  }
+
+  66% {
+    transform: translateY(6px) rotate(-3deg);
+  }
+}
+
+/* Back button inside banner */
 .backButton {
-  background: none;
-  border: 1px solid #e2e8f0;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid;
+  /* color set inline via accentColor */
+  padding: 0.45rem 1rem;
+  border-radius: var(--border-radius);
   cursor: pointer;
-  font-size: 0.9rem;
-  color: #4a5568;
-  transition: all 0.2s;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: var(--font-family);
+  transition: all 0.3s ease;
+  margin-bottom: 1.75rem;
 }
 
 .backButton:hover {
-  background: #f7fafc;
-  border-color: #cbd5e0;
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateX(-3px);
 }
 
-.agentInfo {
+/* Agent identity row: image + text side by side */
+.agentIdentity {
+  display: flex;
+  align-items: flex-start;
+  gap: 2rem;
+  padding-bottom: 2rem;
+}
+
+/* ── Banner image ───────────────────────────────────────────── */
+.bannerImageWrap {
+  flex-shrink: 0;
+  width: 110px;
+  height: 110px;
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
   display: flex;
   align-items: center;
-  gap: 1rem;
+  justify-content: center;
+  transition: box-shadow 0.3s ease;
 }
 
-.agentIcon {
-  font-size: 2.5rem;
+.bannerImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
-.agentInfo h1 {
-  margin: 0;
-  font-size: 1.5rem;
-  color: #1a202c;
+.bannerEmoji {
+  font-size: 3.5rem;
+  line-height: 1;
 }
 
-.agentInfo p {
-  margin: 0.25rem 0 0 0;
-  color: #718096;
-  font-size: 0.9rem;
+/* ── Agent text metadata ────────────────────────────────────── */
+.agentMeta {
+  flex: 1;
+  min-width: 0;
 }
 
+.categoryBadge {
+  display: inline-block;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--foreground-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  margin-bottom: 0.6rem;
+}
+
+.agentName {
+  font-size: 2rem;
+  font-weight: 900;
+  margin: 0 0 0.3rem 0;
+  line-height: 1.1;
+  /* color set inline via accentColor */
+}
+
+.agentTagline {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--foreground-muted);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin: 0 0 0.6rem 0;
+}
+
+.agentDescription {
+  font-size: 0.95rem;
+  color: var(--foreground-muted);
+  line-height: 1.55;
+  margin: 0 0 1rem 0;
+  max-width: 560px;
+}
+
+/* Feature pills */
+.featurePills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.featurePill {
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  border: 1px solid;
+  /* color set inline */
+  transition: opacity 0.2s ease;
+}
+
+.featurePill:hover {
+  opacity: 0.75;
+}
+
+/* Bottom glow line */
+.bannerGlow {
+  height: 2px;
+  width: 100%;
+  margin-top: 0;
+  opacity: 0.7;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   CHAT AREA
+   ════════════════════════════════════════════════════════════════ */
 .chatContainer {
   flex: 1;
   display: flex;
@@ -59,38 +235,69 @@
   max-width: 900px;
   width: 100%;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1.75rem 2rem;
+  position: relative;
+  z-index: 1;
 }
 
+/* ── Message list ───────────────────────────────────────────── */
 .messages {
   flex: 1;
   overflow-y: auto;
-  padding: 1rem 0;
+  padding: 0.5rem 0 1rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary) var(--background-light);
 }
 
+.messages::-webkit-scrollbar {
+  width: 5px;
+}
+
+.messages::-webkit-scrollbar-track {
+  background: var(--background-light);
+  border-radius: 3px;
+}
+
+.messages::-webkit-scrollbar-thumb {
+  background: var(--gradient-primary);
+  border-radius: 3px;
+}
+
+/* ── Welcome state ──────────────────────────────────────────── */
 .welcomeMessage {
   text-align: center;
-  padding: 3rem 1rem;
-  color: #718096;
+  padding: 3.5rem 2rem;
+  animation: fadeInUp 0.7s ease-out;
 }
 
-.welcomeMessage p:first-child {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #2d3748;
-  margin-bottom: 0.5rem;
+.welcomeIcon {
+  font-size: 3.5rem;
+  display: block;
+  margin-bottom: 1rem;
+  filter: drop-shadow(0 0 16px currentColor);
+  animation: pulseGlow 3s ease-in-out infinite;
+}
+
+.welcomeTitle {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0 0 0.6rem 0;
 }
 
 .welcomeSubtext {
   font-size: 0.95rem;
+  color: var(--foreground-muted);
+  line-height: 1.6;
+  margin: 0;
 }
 
+/* ── Bubbles ────────────────────────────────────────────────── */
 .message {
   display: flex;
-  margin-bottom: 1rem;
+  animation: fadeInUp 0.25s ease-out;
 }
 
 .userMessage {
@@ -102,69 +309,234 @@
 }
 
 .messageContent {
-  max-width: 70%;
-  padding: 0.875rem 1.25rem;
-  border-radius: 12px;
-  line-height: 1.5;
-  word-wrap: break-word;
+  max-width: 72%;
+  padding: 0.85rem 1.2rem;
+  border-radius: 16px;
+  line-height: 1.6;
+  word-break: break-word;
+  font-size: 0.95rem;
 }
 
+/* User bubble: gradient set inline per-agent */
 .userMessage .messageContent {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  color: #000;
+  border-bottom-right-radius: 4px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
+/* Assistant bubble: glassmorphism */
 .assistantMessage .messageContent {
-  background: white;
-  color: #2d3748;
-  border: 1px solid #e2e8f0;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  color: var(--foreground);
+  border: 1px solid var(--glass-border);
+  border-bottom-left-radius: 4px;
+  box-shadow: var(--glass-shadow);
 }
 
+/* ── Typing indicator ───────────────────────────────────────── */
+.typingDots {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  padding: 0.1rem 0;
+}
+
+.typingDots span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  animation: bounce 1.2s ease-in-out infinite;
+}
+
+.typingDots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typingDots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+/* ── Input form ─────────────────────────────────────────────── */
 .inputForm {
   display: flex;
   gap: 0.75rem;
-  padding: 1rem;
-  background: white;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  padding: 0.9rem 1.1rem;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  border-radius: var(--border-radius-lg);
+  border: 1px solid;
+  /* tinted via accentColor inline */
   margin-top: 1rem;
+  transition: box-shadow 0.3s ease;
+}
+
+.inputForm:focus-within {
+  box-shadow: var(--shadow-sm);
 }
 
 .messageInput {
   flex: 1;
-  padding: 0.875rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  font-size: 1rem;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--border-radius);
+  font-size: 0.95rem;
+  color: var(--foreground);
+  font-family: var(--font-family);
   outline: none;
+  transition: border-color 0.3s ease, background 0.3s ease;
+}
+
+.messageInput::placeholder {
+  color: var(--foreground-muted);
 }
 
 .messageInput:focus {
-  border-color: #667eea;
+  border-color: var(--primary);
+  background: rgba(0, 212, 255, 0.05);
 }
 
 .sendButton {
-  padding: 0.875rem 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  padding: 0.75rem 1.5rem;
+  /* background set inline per-agent */
+  color: #000;
   border: none;
-  border-radius: 8px;
-  font-weight: 600;
+  border-radius: var(--border-radius);
+  font-weight: 700;
+  font-size: 0.9rem;
+  font-family: var(--font-family);
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  letter-spacing: 0.03em;
 }
 
 .sendButton:hover:not(:disabled) {
   transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  filter: brightness(1.1);
 }
 
 .sendButton:disabled {
-  opacity: 0.6;
+  opacity: 0.45;
   cursor: not-allowed;
+  transform: none;
 }
 
-.loading {
-  padding: 3rem;
-  text-align: center;
-  color: #718096;
+/* ── Shared loading dots (loading screen) ───────────────────── */
+.loadingDots {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.loadingDots span {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--primary);
+  animation: bounce 1.2s ease-in-out infinite;
+}
+
+.loadingDots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.loadingDots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+/* ── Keyframes ──────────────────────────────────────────────── */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bounce {
+
+  0%,
+  80%,
+  100% {
+    transform: scale(0.65);
+    opacity: 0.4;
+  }
+
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes pulseGlow {
+
+  0%,
+  100% {
+    filter: drop-shadow(0 0 8px currentColor);
+  }
+
+  50% {
+    filter: drop-shadow(0 0 22px currentColor);
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .banner {
+    padding: 1.5rem 1rem 0;
+  }
+
+  .agentIdentity {
+    gap: 1.25rem;
+  }
+
+  .bannerImageWrap {
+    width: 80px;
+    height: 80px;
+  }
+
+  .agentName {
+    font-size: 1.5rem;
+  }
+
+  .chatContainer {
+    padding: 1rem;
+  }
+
+  .messageContent {
+    max-width: 88%;
+  }
+}
+
+@media (max-width: 520px) {
+  .agentIdentity {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .featurePills {
+    justify-content: center;
+  }
+
+  .agentDescription {
+    max-width: 100%;
+  }
+
+  .inputForm {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .sendButton {
+    width: 100%;
+  }
 }

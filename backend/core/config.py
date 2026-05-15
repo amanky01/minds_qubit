@@ -1,8 +1,19 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import field_validator, Field
-from typing import List, Union
+"""
+Application configuration.
+
+All settings are read from environment variables (or a .env file).
+Pydantic-Settings validates types and provides sensible defaults so the
+server can start in development without a full .env file.
+"""
+
+from __future__ import annotations
+
 import json
 import os
+from typing import List, Union
+
+from pydantic import Field, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -13,37 +24,61 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    # MongoDB
-    MONGODB_URL: str = Field(default="mongodb://localhost:27017", description="MongoDB connection URL")
-    DATABASE_NAME: str = Field(default="mq_users", description="Database name")
+    # ── MongoDB ────────────────────────────────────────────────────────────
+    MONGODB_URL: str = Field(
+        default="mongodb://localhost:27017",
+        description="MongoDB connection URL",
+    )
+    # Central database – users, plans, quotas, audit logs
+    CENTRAL_DB_NAME: str = Field(
+        default="mindsqubit_core",
+        description="Name of the central (platform) database",
+    )
+    # Each agent database is named:  {AGENT_DB_PREFIX}{agent_id}
+    AGENT_DB_PREFIX: str = Field(
+        default="mindsqubit_agent_",
+        description="Prefix for per-agent databases",
+    )
 
-    # JWT
-    JWT_SECRET_KEY: str = Field(default="", description="Secret key for JWT signing (required in production)")
-    JWT_ALGORITHM: str = Field(default="HS256", description="JWT algorithm")
-    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=30, description="Access token expiry in minutes")
-    JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = Field(default=7, description="Refresh token expiry in days")
+    # ── JWT ────────────────────────────────────────────────────────────────
+    JWT_SECRET_KEY: str = Field(
+        default="",
+        description="Secret key for JWT signing (required in production)",
+    )
+    JWT_ALGORITHM: str = Field(default="HS256")
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=30)
+    JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = Field(default=7)
 
-    # Gemini
-    GEMINI_API_KEY: str = Field(default="", description="Google Gemini API key")
-    GEMINI_MODEL: str = Field(default="gemini-1.5-flash", description="Gemini model name (e.g. gemini-1.5-flash, gemini-1.5-pro)")
+    # ── Gemini ─────────────────────────────────────────────────────────────
+    GEMINI_API_KEY: str = Field(default="")
+    GEMINI_MODEL: str = Field(default="gemini-1.5-flash")
 
-    # OAuth
-    GOOGLE_CLIENT_ID: str = Field(default="", description="Google OAuth client ID")
-    GOOGLE_CLIENT_SECRET: str = Field(default="", description="Google OAuth client secret")
-    GITHUB_CLIENT_ID: str = Field(default="", description="GitHub OAuth client ID")
-    GITHUB_CLIENT_SECRET: str = Field(default="", description="GitHub OAuth client secret")
+    # ── OAuth ──────────────────────────────────────────────────────────────
+    GOOGLE_CLIENT_ID: str = Field(default="")
+    GOOGLE_CLIENT_SECRET: str = Field(default="")
+    GITHUB_CLIENT_ID: str = Field(default="")
+    GITHUB_CLIENT_SECRET: str = Field(default="")
 
-    # CORS & OAuth redirects
-    CORS_ORIGINS: Union[str, List[str]] = Field(default="http://localhost:3000", description="Comma-separated CORS origins or JSON array")
-    OAUTH_REDIRECT_URL: str = Field(default="http://localhost:8000/api/v1/auth/oauth", description="OAuth callback base URL")
+    # ── CORS & redirects ───────────────────────────────────────────────────
+    CORS_ORIGINS: Union[str, List[str]] = Field(default="http://localhost:3000")
+    OAUTH_REDIRECT_URL: str = Field(
+        default="http://localhost:8000/api/v1/auth/oauth"
+    )
 
-    # Server (for uvicorn)
-    HOST: str = Field(default="0.0.0.0", description="Server bind host")
-    PORT: int = Field(default=8000, description="Server bind port")
+    # ── Plans ──────────────────────────────────────────────────────────────
+    DEFAULT_PLAN_ID: str = Field(
+        default="free",
+        description="Plan assigned to every new user",
+    )
 
+    # ── Server ─────────────────────────────────────────────────────────────
+    HOST: str = Field(default="0.0.0.0")
+    PORT: int = Field(default=8000)
+
+    # ── Validators ─────────────────────────────────────────────────────────
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
-    def parse_cors_origins(cls, v):
+    def parse_cors_origins(cls, v: object) -> List[str]:
         if v is None:
             return ["http://localhost:3000"]
         if isinstance(v, list):
@@ -56,9 +91,10 @@ class Settings(BaseSettings):
             except (json.JSONDecodeError, ValueError):
                 pass
             origins = [o.strip() for o in v.split(",") if o.strip()]
-            return origins if origins else ["http://localhost:3000"]
+            return origins or ["http://localhost:3000"]
         return ["http://localhost:3000"]
 
+    # ── Convenience properties ─────────────────────────────────────────────
     @property
     def cors_origins_list(self) -> List[str]:
         if isinstance(self.CORS_ORIGINS, list):

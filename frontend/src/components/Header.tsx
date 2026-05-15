@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
 import styles from '@/styles/Home.module.css';
@@ -18,17 +19,16 @@ export default function Header() {
     <header className={styles.header}>
       <div className={styles.headerContent}>
         <div className={styles.logo}>
-          <a href="/">
+          <Link href="/">
             <h1>TheMindsQubit</h1>
-          </a>
+          </Link>
         </div>
         <nav className={styles.nav}>
-          <a href="/#agents">Agents</a>
-          <a href="/clients">Clients</a>
-          <a href="/blog">Tech Blog</a>
-          <a href="/#about">About</a>
-          <a href="/#contact">Contact</a>
-          <button 
+          <Link href="/#agents">Agents</Link>
+          <Link href="/blog">Tech Blog</Link>
+          <Link href="/#about">About</Link>
+          <Link href="/#contact">Contact</Link>
+          <button
             onClick={handleAuthClick}
             className={styles.authButton}
           >

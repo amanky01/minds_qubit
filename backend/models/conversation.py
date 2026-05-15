@@ -1,52 +1,41 @@
+"""
+Conversation models.
+
+Conversations are stored in per-agent databases:
+    mindsqubit_agent_<agent_id> → conversations collection
+
+Each document contains the full message history for one chat session.
+"""
+
+from __future__ import annotations
+
 from datetime import datetime
-from typing import List, Dict, Any, Optional, Annotated
-from bson import ObjectId
-from pydantic import BaseModel, Field, GetJsonSchemaHandler
-from pydantic.json_schema import JsonSchemaValue
-from pydantic_core import core_schema
+from typing import Annotated, Any, Dict, List, Optional
 
+from pydantic import BaseModel, Field
 
-class PyObjectId(ObjectId):
-    @classmethod
-    def __get_pydantic_core_schema__(
-        cls, source_type, handler
-    ) -> core_schema.CoreSchema:
-        def validate(value):
-            if isinstance(value, ObjectId):
-                return value
-            if isinstance(value, str):
-                if ObjectId.is_valid(value):
-                    return ObjectId(value)
-                raise ValueError("Invalid ObjectId string")
-            raise ValueError("Invalid ObjectId")
-        
-        return core_schema.no_info_after_validator_function(
-            validate,
-            core_schema.str_schema(),
-            serialization=core_schema.str_schema(),
-        )
-
-    @classmethod
-    def __get_pydantic_json_schema__(
-        cls, _core_schema, handler
-    ) -> JsonSchemaValue:
-        return {"type": "string"}
+from models.shared import PyObjectId
 
 
 class Message(BaseModel):
-    role: str  # "user" or "assistant"
+    role: str          # 'user' | 'assistant'
     content: str
     timestamp: datetime = Field(default_factory=datetime.utcnow)
 
 
 class ConversationBase(BaseModel):
-    user_id: str
+    user_id: str       # str of ObjectId — links back to central users collection
     agent_id: str
-    messages: List[Message] = []
+    messages: List[Message] = Field(default_factory=list)
+    # Auto-generated from the first user message for display in history list
+    title: Optional[str] = None
+    # Agent-specific extra data (e.g. blog post id, research topic)
+    metadata: Dict[str, Any] = Field(default_factory=dict)
 
 
 class ConversationInDB(ConversationBase):
-    _id: Annotated[PyObjectId, Field(default_factory=PyObjectId, alias="_id")]
+    """Shape of a document in the agent's conversations collection."""
+    id: Annotated[PyObjectId, Field(default_factory=PyObjectId, alias="_id")]
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
@@ -57,6 +46,7 @@ class ConversationInDB(ConversationBase):
 
 
 class Conversation(ConversationBase):
+    """API-facing shape (id as string, datetimes serialised)."""
     id: str
     created_at: datetime
     updated_at: datetime

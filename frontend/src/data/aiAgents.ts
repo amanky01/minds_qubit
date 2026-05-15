@@ -9,7 +9,7 @@ export interface Agent {
 
 export const aiAgents: Agent[] = [
   {
-    id: 1,
+    id: "codecraft",
     name: "CodeCraft",
     description: "Your AI programming assistant that helps you write, debug, and optimize code across multiple languages.",
     icon: "💻",
@@ -17,7 +17,7 @@ export const aiAgents: Agent[] = [
     features: ["Code Generation", "Bug Detection", "Code Review", "Documentation"]
   },
   {
-    id: 2,
+    id: "dataviz",
     name: "DataViz",
     description: "Transform your data into stunning visualizations and insights with AI-powered analytics.",
     icon: "📊",
@@ -25,7 +25,7 @@ export const aiAgents: Agent[] = [
     features: ["Data Analysis", "Chart Generation", "Insight Discovery", "Report Creation"]
   },
   {
-    id: 3,
+    id: "contentcreator",
     name: "ContentCreator",
     description: "Generate engaging content, articles, and creative writing with AI assistance.",
     icon: "✍️",
@@ -33,7 +33,7 @@ export const aiAgents: Agent[] = [
     features: ["Article Writing", "Blog Posts", "Social Media", "Creative Stories"]
   },
   {
-    id: 4,
+    id: "designmaster",
     name: "DesignMaster",
     description: "Create beautiful designs, logos, and visual content with AI-powered design tools.",
     icon: "🎨",
@@ -41,7 +41,7 @@ export const aiAgents: Agent[] = [
     features: ["Logo Design", "UI/UX", "Graphics", "Branding"]
   },
   {
-    id: 5,
+    id: "researchpro",
     name: "ResearchPro",
     description: "Conduct comprehensive research and gather insights from multiple sources efficiently.",
     icon: "🔍",
@@ -49,7 +49,7 @@ export const aiAgents: Agent[] = [
     features: ["Source Analysis", "Fact Checking", "Trend Analysis", "Report Generation"]
   },
   {
-    id: 6,
+    id: "languagetutor",
     name: "LanguageTutor",
     description: "Learn new languages with personalized AI tutoring and conversation practice.",
     icon: "🌍",

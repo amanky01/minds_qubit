@@ -18,7 +18,7 @@ def _discover_agents() -> Dict[str, BaseAgent]:
     
     # Get all Python files in the agents directory
     for module_name in os.listdir(agents_dir):
-        if module_name.endswith('.py') and module_name not in ['__init__.py', 'base.py']:
+        if module_name.endswith('.py') and module_name not in ['__init__.py', 'base.py'] and not module_name.startswith('_'):
             try:
                 # Remove .py extension
                 agent_module_name = module_name[:-3]

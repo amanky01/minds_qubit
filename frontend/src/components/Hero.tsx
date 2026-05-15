@@ -35,7 +35,7 @@ export default function Hero({ aiAgents }: HeroProps) {
         </h1>
         <p className={styles.heroSubtitle}>
           Discover specialized AI agents designed to help you accomplish any task. 
-          From coding to content creation, we've got you covered.
+          From coding to content creation, we&apos;ve got you covered.
         </p>
         <div className={styles.heroButtons}>
           <button className={styles.primaryButton} onClick={handleGetStarted}>

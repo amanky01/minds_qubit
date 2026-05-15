@@ -1,3 +1,4 @@
+import { isAxiosError } from "axios";
 import api from "@/network/core/axiosInstance";
 
 export interface User {
@@ -28,28 +29,41 @@ export interface AuthResponse {
 type ApiError = {
   message: string;
   status?: number;
-  original?: any;
+  original?: unknown;
 };
 
-const getAuthErrorMessage = (error: any): ApiError => {
-  if (!error || !error.response) {
+function getDetailFromData(data: unknown): string | undefined {
+  if (data == null) return undefined;
+  if (typeof data === "string") return data;
+  if (typeof data === "object" && "detail" in data) {
+    const d = (data as { detail: unknown }).detail;
+    if (typeof d === "string") return d;
+  }
+  if (typeof data === "object" && "message" in data) {
+    const m = (data as { message: unknown }).message;
+    if (typeof m === "string") return m;
+  }
+  return undefined;
+}
+
+const getAuthErrorMessage = (error: unknown): ApiError => {
+  if (!isAxiosError(error) || !error.response) {
     return {
-      message: "Unable to connect to the server. Please ensure the backend is running on http://localhost:8000",
+      message:
+        "Unable to connect to the server. Please ensure the backend is running on http://localhost:8000",
       status: undefined,
       original: error,
     };
   }
 
-  const status = error.response?.status;
-  // backend may use `detail`, `message`, or nested errors
-  const detail =
-    error.response?.data?.detail ||
-    error.response?.data?.message ||
-    (typeof error.response?.data === "string" ? error.response.data : undefined);
+  const status = error.response.status;
+  const detail = getDetailFromData(error.response.data);
 
   if (status === 401) {
     return {
-      message: detail || "Invalid email or password. Please check your credentials and try again.",
+      message:
+        detail ||
+        "Invalid email or password. Please check your credentials and try again.",
       status,
       original: error,
     };
@@ -91,18 +105,21 @@ export const authService = {
     try {
       const response = await api.post("/api/v1/auth/login", credentials);
       const data = response.data;
-      
+
       // Store tokens
       if (typeof window !== "undefined") {
         localStorage.setItem("access_token", data.access_token);
         localStorage.setItem("refresh_token", data.refresh_token);
       }
-      
+
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       const apiError = getAuthErrorMessage(error);
       console.debug("Login error:", apiError.original || error);
-      const authError = new Error(apiError.message) as Error & { status?: number; original?: any };
+      const authError = new Error(apiError.message) as Error & {
+        status?: number;
+        original?: unknown;
+      };
       authError.status = apiError.status;
       authError.original = apiError.original;
       throw authError;
@@ -113,18 +130,21 @@ export const authService = {
     try {
       const response = await api.post("/api/v1/auth/register", data);
       const authData = response.data;
-      
+
       // Store tokens
       if (typeof window !== "undefined") {
         localStorage.setItem("access_token", authData.access_token);
         localStorage.setItem("refresh_token", authData.refresh_token);
       }
-      
+
       return authData;
-    } catch (error: any) {
+    } catch (error: unknown) {
       const apiError = getAuthErrorMessage(error);
       console.debug("Registration error:", apiError.original || error);
-      const authError = new Error(apiError.message) as Error & { status?: number; original?: any };
+      const authError = new Error(apiError.message) as Error & {
+        status?: number;
+        original?: unknown;
+      };
       authError.status = apiError.status;
       authError.original = apiError.original;
       throw authError;
@@ -135,7 +155,7 @@ export const authService = {
     try {
       const response = await api.get("/api/v1/auth/me");
       return response.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Get user error:", error);
       throw error;
     }
@@ -147,16 +167,16 @@ export const authService = {
       if (!refreshToken) {
         throw new Error("No refresh token available");
       }
-      
+
       const response = await api.post("/api/v1/auth/refresh", {
         refresh_token: refreshToken,
       });
-      
+
       const newAccessToken = response.data.access_token;
       localStorage.setItem("access_token", newAccessToken);
-      
+
       return newAccessToken;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Token refresh error:", error);
       this.logout();
       throw error;

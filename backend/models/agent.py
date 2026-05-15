@@ -1,51 +1,41 @@
+"""
+Agent registry models.
+
+The agent_registry collection in the central DB mirrors the in-memory
+registry that is built from the agents/ directory at startup.
+It exists so admin dashboards and future microservices can inspect
+available agents without importing Python modules.
+"""
+
+from __future__ import annotations
+
 from datetime import datetime
-from typing import List, Dict, Any, Optional, Annotated
-from bson import ObjectId
-from pydantic import BaseModel, Field, GetJsonSchemaHandler
-from pydantic.json_schema import JsonSchemaValue
-from pydantic_core import core_schema
+from typing import Annotated, Any, Dict, List, Optional
 
+from pydantic import BaseModel, Field
 
-class PyObjectId(ObjectId):
-    @classmethod
-    def __get_pydantic_core_schema__(
-        cls, source_type, handler
-    ) -> core_schema.CoreSchema:
-        def validate(value):
-            if isinstance(value, ObjectId):
-                return value
-            if isinstance(value, str):
-                if ObjectId.is_valid(value):
-                    return ObjectId(value)
-                raise ValueError("Invalid ObjectId string")
-            raise ValueError("Invalid ObjectId")
-        
-        return core_schema.no_info_after_validator_function(
-            validate,
-            core_schema.str_schema(),
-            serialization=core_schema.str_schema(),
-        )
-
-    @classmethod
-    def __get_pydantic_json_schema__(
-        cls, _core_schema, handler
-    ) -> JsonSchemaValue:
-        return {"type": "string"}
+from models.shared import PyObjectId
 
 
 class AgentBase(BaseModel):
-    id: str  # Agent identifier (e.g., "codecraft")
+    id: str                        # e.g. 'codecraft'
     name: str
     description: str
     icon: str
     category: str
     features: List[str]
     system_prompt: str
-    gemini_config: Dict[str, Any] = {}
+    gemini_config: Dict[str, Any] = Field(default_factory=dict)
+    # Quota defaults declared by the agent itself
+    quota_config: Dict[str, int] = Field(default_factory=dict)
+    # Whether the agent has its own dedicated database
+    has_own_db: bool = True
+    db_name: str = ""
 
 
 class AgentInDB(AgentBase):
-    _id: Annotated[PyObjectId, Field(default_factory=PyObjectId, alias="_id")]
+    """Shape of a document in central DB → agent_registry collection."""
+    mongo_id: Annotated[PyObjectId, Field(default_factory=PyObjectId, alias="_id")]
     is_active: bool = True
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
@@ -57,6 +47,7 @@ class AgentInDB(AgentBase):
 
 
 class Agent(AgentBase):
+    """API-facing shape."""
     is_active: bool
     created_at: datetime
     updated_at: datetime

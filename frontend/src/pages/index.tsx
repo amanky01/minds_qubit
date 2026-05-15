@@ -12,7 +12,6 @@ import { agentService } from "@/services/agentService";
 
 export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [allAgents, setAllAgents] = useState<Agent[]>([]);
   const [categories, setCategories] = useState<string[]>(["All"]);
   const [loading, setLoading] = useState(true);
@@ -29,9 +28,10 @@ export default function Home() {
         ]);
         setAllAgents(agentsData);
         setCategories(["All", ...categoriesData]);
-      } catch (err: any) {
+      } catch (err: unknown) {
         // Use the error message from the service (already formatted)
-        const errorMessage = err?.message || "Failed to load agents. Please ensure the backend server is running.";
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to load agents. Please ensure the backend server is running.";
         setError(errorMessage);
       } finally {
         setLoading(false);
@@ -50,8 +50,6 @@ export default function Home() {
   };
 
   const handleAgentClick = (agent: Agent) => {
-    setSelectedAgent(agent);
-    
     // Navigate to blog page for TechBlog agent
     if (agent.id === "techblog" || agent.name === "TechBlog") {
       window.location.href = "/blog";

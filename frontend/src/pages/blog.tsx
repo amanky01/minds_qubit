@@ -1,4 +1,5 @@
 import Head from "next/head";
+import Link from "next/link";
 import { useState } from "react";
 import styles from "@/styles/Blog.module.css";
 import Header from "@/components/Header";
@@ -36,7 +37,7 @@ export default function Blog() {
       }
 
       setGeneratedContent(data.content);
-    } catch (err) {
+    } catch {
       setError("Failed to generate blog content. Please try again.");
     } finally {
       setIsGenerating(false);
@@ -64,9 +65,9 @@ export default function Blog() {
           <div className={styles.content}>
             <div className={styles.header}>
               <div className={styles.headerTop}>
-                <a href="/" className={styles.backButton}>
+                <Link href="/" className={styles.backButton}>
                   ← Back to Home
-                </a>
+                </Link>
               </div>
               <h1>Technical Blog Generator</h1>
               <p>Generate professional technical blog content with AI assistance</p>

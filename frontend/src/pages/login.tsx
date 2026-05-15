@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useRouter } from "next/router";
 import Head from "next/head";
 import { useAuth } from "@/contexts/AuthContext";
@@ -28,14 +29,15 @@ export default function Login() {
       await login(email, password);
       const redirectTo = router.query.redirect as string || "/";
       router.push(redirectTo);
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Use the formatted error message from authService and handle auth statuses
-      const status = err?.status;
+      const authErr = err as Error & { status?: number };
+      const status = authErr.status;
       if (status === 401) {
-        setError(err?.message || "Invalid credentials. Please try again.");
+        setError(authErr.message || "Invalid credentials. Please try again.");
       } else if (status === 403) {
-        setError(err?.message || "You are not authorized to access this resource.");
-      } else if (!err || !err.message) {
+        setError(authErr.message || "You are not authorized to access this resource.");
+      } else if (!(err instanceof Error) || !err.message) {
         setError("Login failed. Please check your credentials and ensure the backend is running.");
       } else {
         setError(err.message);
@@ -126,10 +128,10 @@ export default function Login() {
           </div>
 
           <p className={styles.authFooter}>
-            Don't have an account?{" "}
-            <a href="/signup" className={styles.authLink}>
+            Don&apos;t have an account?{" "}
+            <Link href="/signup" className={styles.authLink}>
               Sign up
-            </a>
+            </Link>
           </p>
         </div>
       </div>

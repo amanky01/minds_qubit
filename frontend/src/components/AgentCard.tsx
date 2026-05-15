@@ -1,17 +1,11 @@
 import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
+import type { Agent } from '@/data/aiAgents';
 import styles from '@/styles/Home.module.css';
 
 interface AgentCardProps {
-  agent: {
-    id: string;
-    name: string;
-    description: string;
-    icon: string;
-    category: string;
-    features: string[];
-  };
-  onClick: (agent: any) => void;
+  agent: Agent;
+  onClick: (agent: Agent) => void;
 }
 
 export default function AgentCard({ agent, onClick }: AgentCardProps) {

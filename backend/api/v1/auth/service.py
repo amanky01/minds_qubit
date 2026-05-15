@@ -1,219 +1,180 @@
-from typing import Optional, Dict
-from core.database import get_database
+"""
+Authentication service.
+
+Handles:  register · login · token refresh · get-me · OAuth (Google / GitHub)
+
+All DB access goes through db_manager.central so this service never needs
+to know the physical collection location.
+"""
+
+from __future__ import annotations
+
+import logging
+from datetime import datetime
+from typing import Dict, Optional
+
+from bson import ObjectId
+
+from core.config import settings
+from core.database import db_manager
 from core.security import (
-    verify_password,
-    get_password_hash,
     create_access_token,
     create_refresh_token,
-    decode_token
+    decode_token,
+    get_password_hash,
+    verify_password,
 )
-from models.user import UserInDB, UserCreate, User
-from datetime import datetime, timedelta
-from bson import ObjectId
-from core.config import settings
-import logging
+from models.user import UserCreate, UserInDB
 
 logger = logging.getLogger(__name__)
 
+# Convenience alias
+_users = lambda: db_manager.central["users"]  # noqa: E731
+
+
+def _user_response(doc: dict) -> dict:
+    """Build the public user dict returned in all auth responses."""
+    return {
+        "id":        str(doc["_id"]),
+        "email":     doc["email"],
+        "full_name": doc.get("full_name"),
+        "plan_id":   doc.get("plan_id", "free"),
+        "is_active": doc.get("is_active", True),
+    }
+
 
 class AuthService:
-    """Service for authentication operations"""
-    
+
+    # ── Register ───────────────────────────────────────────────────────────
+
     async def register_user(self, user_data: UserCreate) -> Dict:
-        """Register a new user"""
-        try:
-            db = get_database()
-        except ConnectionError as e:
-            raise ValueError("Database connection error. Please ensure MongoDB is running.")
-        
-        users_collection = db["users"]
-        
-        # Check if user already exists
-        existing_user = await users_collection.find_one({"email": user_data.email})
-        if existing_user:
-            raise ValueError("User with this email already exists")
-        
-        # Create user
-        hashed_password = get_password_hash(user_data.password)
+        col = _users()
+        if await col.find_one({"email": user_data.email}):
+            raise ValueError("An account with this email already exists.")
+
         user = UserInDB(
             email=user_data.email,
-            hashed_password=hashed_password,
-            full_name=user_data.full_name
+            hashed_password=get_password_hash(user_data.password),
+            full_name=user_data.full_name,
+            plan_id=settings.DEFAULT_PLAN_ID,
         )
-        
-        result = await users_collection.insert_one(user.dict(by_alias=True))
+        result = await col.insert_one(user.model_dump(by_alias=True))
         user_id = str(result.inserted_id)
-        
-        # Create tokens
-        access_token = create_access_token(data={"sub": user_id, "email": user_data.email})
-        refresh_token = create_refresh_token(data={"sub": user_id, "email": user_data.email})
-        
+
         return {
-            "access_token": access_token,
-            "refresh_token": refresh_token,
-            "token_type": "bearer",
+            **self._make_tokens(user_id, user_data.email),
             "user": {
-                "id": user_id,
-                "email": user_data.email,
+                "id":        user_id,
+                "email":     user_data.email,
                 "full_name": user_data.full_name,
-                "is_active": True
-            }
+                "plan_id":   settings.DEFAULT_PLAN_ID,
+                "is_active": True,
+            },
         }
-    
+
+    # ── Login ──────────────────────────────────────────────────────────────
+
     async def login_user(self, email: str, password: str) -> Dict:
-        """Login user and return tokens"""
-        try:
-            db = get_database()
-        except ConnectionError as e:
-            raise ValueError("Database connection error. Please ensure MongoDB is running.")
-        
-        users_collection = db["users"]
-        
-        # Find user
-        user_doc = await users_collection.find_one({"email": email})
-        if not user_doc:
-            raise ValueError("Invalid email or password")
-        
-        # Verify password
-        if not verify_password(password, user_doc["hashed_password"]):
-            raise ValueError("Invalid email or password")
-        
-        # Check if user is active
-        if not user_doc.get("is_active", True):
-            raise ValueError("User account is inactive")
-        
-        user_id = str(user_doc["_id"])
-        
-        # Create tokens
-        access_token = create_access_token(data={"sub": user_id, "email": email})
-        refresh_token = create_refresh_token(data={"sub": user_id, "email": email})
-        
-        # Update last login
-        await users_collection.update_one(
-            {"_id": ObjectId(user_id)},
-            {"$set": {"updated_at": datetime.utcnow()}}
+        col = _users()
+        doc = await col.find_one({"email": email})
+
+        # Use the same error message for missing user and wrong password
+        # to avoid email enumeration.
+        if not doc or not verify_password(password, doc.get("hashed_password", "")):
+            raise ValueError("Invalid email or password.")
+
+        if not doc.get("is_active", True):
+            raise ValueError("This account has been deactivated.")
+
+        user_id = str(doc["_id"])
+        await col.update_one(
+            {"_id": doc["_id"]},
+            {"$set": {"updated_at": datetime.utcnow()}},
         )
-        
-        return {
-            "access_token": access_token,
-            "refresh_token": refresh_token,
-            "token_type": "bearer",
-            "user": {
-                "id": user_id,
-                "email": email,
-                "full_name": user_doc.get("full_name"),
-                "is_active": user_doc.get("is_active", True)
-            }
-        }
-    
+
+        return {**self._make_tokens(user_id, email), "user": _user_response(doc)}
+
+    # ── Token refresh ──────────────────────────────────────────────────────
+
     async def refresh_access_token(self, refresh_token: str) -> Dict:
-        """Refresh access token using refresh token"""
         payload = decode_token(refresh_token)
-        
         if not payload or payload.get("type") != "refresh":
-            raise ValueError("Invalid refresh token")
-        
-        user_id = payload.get("sub")
-        email = payload.get("email")
-        
+            raise ValueError("Invalid or expired refresh token.")
+
+        user_id: Optional[str] = payload.get("sub")
+        email: Optional[str] = payload.get("email")
         if not user_id or not email:
-            raise ValueError("Invalid token payload")
-        
-        # Verify user still exists and is active
-        try:
-            db = get_database()
-        except ConnectionError as e:
-            raise ValueError("Database connection error. Please ensure MongoDB is running.")
-        
-        users_collection = db["users"]
-        user_doc = await users_collection.find_one({"_id": ObjectId(user_id)})
-        
-        if not user_doc or not user_doc.get("is_active", True):
-            raise ValueError("User not found or inactive")
-        
-        # Create new access token
-        access_token = create_access_token(data={"sub": user_id, "email": email})
-        
-        return {
-            "access_token": access_token,
-            "token_type": "bearer"
-        }
-    
+            raise ValueError("Malformed token payload.")
+
+        doc = await _users().find_one({"_id": ObjectId(user_id)})
+        if not doc or not doc.get("is_active", True):
+            raise ValueError("User not found or account deactivated.")
+
+        access_token = create_access_token({"sub": user_id, "email": email})
+        return {"access_token": access_token, "token_type": "bearer"}
+
+    # ── Get current user ───────────────────────────────────────────────────
+
     async def get_current_user(self, user_id: str) -> Dict:
-        """Get current user information"""
-        try:
-            db = get_database()
-        except ConnectionError as e:
-            raise ValueError("Database connection error. Please ensure MongoDB is running.")
-        
-        users_collection = db["users"]
-        
-        user_doc = await users_collection.find_one({"_id": ObjectId(user_id)})
-        if not user_doc:
-            raise ValueError("User not found")
-        
-        return {
-            "id": str(user_doc["_id"]),
-            "email": user_doc["email"],
-            "full_name": user_doc.get("full_name"),
-            "is_active": user_doc.get("is_active", True)
-        }
-    
-    async def oauth_login(self, provider: str, provider_user_id: str, email: str, name: Optional[str] = None) -> Dict:
-        """Login or register user via OAuth"""
-        try:
-            db = get_database()
-        except ConnectionError as e:
-            raise ValueError("Database connection error. Please ensure MongoDB is running.")
-        
-        users_collection = db["users"]
-        
-        # Check if user exists with this OAuth provider
-        user_doc = await users_collection.find_one({
-            f"oauth_providers.{provider}": provider_user_id
-        })
-        
-        if not user_doc:
-            # Check if user exists with this email
-            user_doc = await users_collection.find_one({"email": email})
-            
-            if user_doc:
-                # Link OAuth provider to existing account
-                oauth_providers = user_doc.get("oauth_providers", {})
-                oauth_providers[provider] = provider_user_id
-                await users_collection.update_one(
-                    {"_id": user_doc["_id"]},
-                    {"$set": {"oauth_providers": oauth_providers, "updated_at": datetime.utcnow()}}
+        doc = await _users().find_one({"_id": ObjectId(user_id)})
+        if not doc:
+            raise ValueError("User not found.")
+        return _user_response(doc)
+
+    # ── OAuth ──────────────────────────────────────────────────────────────
+
+    async def oauth_login(
+        self,
+        provider: str,
+        provider_user_id: str,
+        email: str,
+        name: Optional[str] = None,
+    ) -> Dict:
+        """Find-or-create a user via OAuth, then return tokens."""
+        col = _users()
+
+        # 1. Try matching by OAuth provider ID
+        doc = await col.find_one({f"oauth_providers.{provider}": provider_user_id})
+
+        if not doc:
+            # 2. Try matching by email (link provider to existing account)
+            doc = await col.find_one({"email": email})
+            if doc:
+                await col.update_one(
+                    {"_id": doc["_id"]},
+                    {
+                        "$set": {
+                            f"oauth_providers.{provider}": provider_user_id,
+                            "updated_at": datetime.utcnow(),
+                        }
+                    },
                 )
             else:
-                # Create new user
+                # 3. Create new user
                 user = UserInDB(
                     email=email,
-                    hashed_password="",  # OAuth users don't have passwords
+                    hashed_password="",       # OAuth users have no password
                     full_name=name,
-                    oauth_providers={provider: provider_user_id}
+                    oauth_providers={provider: provider_user_id},
+                    plan_id=settings.DEFAULT_PLAN_ID,
                 )
-                result = await users_collection.insert_one(user.dict(by_alias=True))
-                user_doc = await users_collection.find_one({"_id": result.inserted_id})
-        
-        user_id = str(user_doc["_id"])
-        
-        # Create tokens
-        access_token = create_access_token(data={"sub": user_id, "email": email})
-        refresh_token = create_refresh_token(data={"sub": user_id, "email": email})
-        
+                result = await col.insert_one(user.model_dump(by_alias=True))
+                doc = await col.find_one({"_id": result.inserted_id})
+
+        user_id = str(doc["_id"])
+        return {**self._make_tokens(user_id, email), "user": _user_response(doc)}
+
+    # ── Internal helpers ───────────────────────────────────────────────────
+
+    @staticmethod
+    def _make_tokens(user_id: str, email: str) -> Dict:
+        payload = {"sub": user_id, "email": email}
         return {
-            "access_token": access_token,
-            "refresh_token": refresh_token,
-            "token_type": "bearer",
-            "user": {
-                "id": user_id,
-                "email": email,
-                "full_name": user_doc.get("full_name"),
-                "is_active": user_doc.get("is_active", True)
-            }
+            "access_token":  create_access_token(payload),
+            "refresh_token": create_refresh_token(payload),
+            "token_type":    "bearer",
         }
 
 
-# Global instance
+# Module-level singleton
 auth_service = AuthService()

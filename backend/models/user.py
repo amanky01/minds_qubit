@@ -1,36 +1,19 @@
+"""
+User domain models.
+
+UserInDB   → stored in central DB → users collection
+UserCreate → request body for registration
+User       → public-facing API response (no password hash)
+"""
+
+from __future__ import annotations
+
 from datetime import datetime
-from typing import Optional, Dict, Annotated
-from bson import ObjectId
-from pydantic import BaseModel, EmailStr, Field, GetJsonSchemaHandler
-from pydantic.json_schema import JsonSchemaValue
-from pydantic_core import core_schema
+from typing import Annotated, Dict, Optional
 
+from pydantic import BaseModel, EmailStr, Field
 
-class PyObjectId(ObjectId):
-    @classmethod
-    def __get_pydantic_core_schema__(
-        cls, source_type, handler
-    ) -> core_schema.CoreSchema:
-        def validate(value):
-            if isinstance(value, ObjectId):
-                return value
-            if isinstance(value, str):
-                if ObjectId.is_valid(value):
-                    return ObjectId(value)
-                raise ValueError("Invalid ObjectId string")
-            raise ValueError("Invalid ObjectId")
-        
-        return core_schema.no_info_after_validator_function(
-            validate,
-            core_schema.str_schema(),
-            serialization=core_schema.str_schema(),
-        )
-
-    @classmethod
-    def __get_pydantic_json_schema__(
-        cls, _core_schema, handler
-    ) -> JsonSchemaValue:
-        return {"type": "string"}
+from models.shared import PyObjectId
 
 
 class UserBase(BaseModel):
@@ -43,9 +26,13 @@ class UserCreate(UserBase):
 
 
 class UserInDB(UserBase):
+    """MongoDB document shape for the users collection."""
     id: Annotated[PyObjectId, Field(default_factory=PyObjectId, alias="_id")]
     hashed_password: str
-    oauth_providers: Dict[str, str] = {}  # {"google": "google_user_id", "github": "github_user_id"}
+    # Social login providers  e.g.  {"google": "<google_sub>", "github": "123"}
+    oauth_providers: Dict[str, str] = Field(default_factory=dict)
+    # Subscription plan: 'free' | 'pro' | 'enterprise'
+    plan_id: str = "free"
     is_active: bool = True
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
@@ -57,7 +44,9 @@ class UserInDB(UserBase):
 
 
 class User(UserBase):
+    """Public-facing user representation (never exposes hashed_password)."""
     id: str
+    plan_id: str
     is_active: bool
     created_at: datetime
     updated_at: datetime

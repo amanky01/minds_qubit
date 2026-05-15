@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useRouter } from "next/router";
 import Head from "next/head";
 import { useAuth } from "@/contexts/AuthContext";
@@ -41,9 +42,10 @@ export default function Signup() {
       await register(email, password, fullName || undefined);
       const redirectTo = router.query.redirect as string || "/";
       router.push(redirectTo);
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Use the formatted error message from authService
-      setError(err?.message || "Registration failed. Please check your input and ensure the backend is running.");
+      const message = err instanceof Error ? err.message : "Registration failed. Please check your input and ensure the backend is running.";
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -148,9 +150,9 @@ export default function Signup() {
 
           <p className={styles.authFooter}>
             Already have an account?{" "}
-            <a href="/login" className={styles.authLink}>
+            <Link href="/login" className={styles.authLink}>
               Sign in
-            </a>
+            </Link>
           </p>
         </div>
       </div>
