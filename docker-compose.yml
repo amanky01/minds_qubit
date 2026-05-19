@@ -1,0 +1,175 @@
+services:
+  mongodb:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  core:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      MONGODB_URL: mongodb://mongodb:27017
+      CENTRAL_DB_NAME: mindsqubit_core
+      JWT_SECRET_KEY: dev_secret_change_in_production
+      CORS_ORIGINS: http://localhost:3000
+      AGENT_SERVICE_API_KEY: dev_agent_service_key
+      AGENT_CODECRAFT_URL: http://codecraft:8010
+      AGENT_DATAVIZ_URL: http://dataviz:8011
+      AGENT_CONTENTCREATOR_URL: http://contentcreator:8012
+      AGENT_DESIGNMASTER_URL: http://designmaster:8013
+      AGENT_LANGUAGETUTOR_URL: http://languagetutor:8014
+      AGENT_RESEARCHPRO_URL: http://researchpro:8015
+      AGENT_TECHBLOG_URL: http://techblog:8016
+      AGENT_OPPORTUNITYALERT_URL: http://opportunityalert:8017
+    depends_on:
+      - mongodb
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  codecraft:
+    build:
+      context: .
+      dockerfile: services/agents/Dockerfile.chat
+      args:
+        AGENT_DIR: codecraft
+        AGENT_PORT: "8010"
+    ports:
+      - "8010:8010"
+    environment:
+      AGENT_ID: codecraft
+      PORT: "8010"
+      MONGODB_URL: mongodb://mongodb:27017
+      AGENT_SERVICE_API_KEY: dev_agent_service_key
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    depends_on:
+      - mongodb
+
+  dataviz:
+    build:
+      context: .
+      dockerfile: services/agents/Dockerfile.chat
+      args:
+        AGENT_DIR: dataviz
+        AGENT_PORT: "8011"
+    ports:
+      - "8011:8011"
+    environment:
+      AGENT_ID: dataviz
+      PORT: "8011"
+      MONGODB_URL: mongodb://mongodb:27017
+      AGENT_SERVICE_API_KEY: dev_agent_service_key
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    depends_on:
+      - mongodb
+
+  contentcreator:
+    build:
+      context: .
+      dockerfile: services/agents/Dockerfile.chat
+      args:
+        AGENT_DIR: contentcreator
+        AGENT_PORT: "8012"
+    ports:
+      - "8012:8012"
+    environment:
+      AGENT_ID: contentcreator
+      PORT: "8012"
+      MONGODB_URL: mongodb://mongodb:27017
+      AGENT_SERVICE_API_KEY: dev_agent_service_key
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    depends_on:
+      - mongodb
+
+  designmaster:
+    build:
+      context: .
+      dockerfile: services/agents/Dockerfile.chat
+      args:
+        AGENT_DIR: designmaster
+        AGENT_PORT: "8013"
+    ports:
+      - "8013:8013"
+    environment:
+      AGENT_ID: designmaster
+      PORT: "8013"
+      MONGODB_URL: mongodb://mongodb:27017
+      AGENT_SERVICE_API_KEY: dev_agent_service_key
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    depends_on:
+      - mongodb
+
+  languagetutor:
+    build:
+      context: .
+      dockerfile: services/agents/Dockerfile.chat
+      args:
+        AGENT_DIR: languagetutor
+        AGENT_PORT: "8014"
+    ports:
+      - "8014:8014"
+    environment:
+      AGENT_ID: languagetutor
+      PORT: "8014"
+      MONGODB_URL: mongodb://mongodb:27017
+      AGENT_SERVICE_API_KEY: dev_agent_service_key
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    depends_on:
+      - mongodb
+
+  researchpro:
+    build:
+      context: .
+      dockerfile: services/agents/Dockerfile.chat
+      args:
+        AGENT_DIR: researchpro
+        AGENT_PORT: "8015"
+    ports:
+      - "8015:8015"
+    environment:
+      AGENT_ID: researchpro
+      PORT: "8015"
+      MONGODB_URL: mongodb://mongodb:27017
+      AGENT_SERVICE_API_KEY: dev_agent_service_key
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    depends_on:
+      - mongodb
+
+  techblog:
+    build:
+      context: .
+      dockerfile: services/agents/Dockerfile.chat
+      args:
+        AGENT_DIR: techblog
+        AGENT_PORT: "8016"
+    ports:
+      - "8016:8016"
+    environment:
+      AGENT_ID: techblog
+      PORT: "8016"
+      MONGODB_URL: mongodb://mongodb:27017
+      AGENT_SERVICE_API_KEY: dev_agent_service_key
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    depends_on:
+      - mongodb
+
+  opportunityalert:
+    build:
+      context: .
+      dockerfile: services/agents/Dockerfile.integration
+    ports:
+      - "8017:8017"
+    environment:
+      AGENT_SERVICE_API_KEY: dev_agent_service_key
+      OPPORTUNITY_CRAWLER_URL: https://opportunity-crawler.onrender.com
+      PORT: "8017"
+
+volumes:
+  mongo_data:

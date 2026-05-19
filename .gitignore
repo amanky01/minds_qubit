@@ -1,5 +1,7 @@
-# Python - Backend
-backend/__pycache__/
+# Python
+**/__pycache__/
+*.py[cod]
+*$py.class
 backend/*.py[cod]
 backend/*$py.class
 backend/*.so

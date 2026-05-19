@@ -1,8 +1,8 @@
 """
 Agent registry models.
 
-The agent_registry collection in the central DB mirrors the in-memory
-registry that is built from the agents/ directory at startup.
+The agent_registry collection in the central DB mirrors agent_catalog
+metadata synced on core startup. Core does not access per-agent databases.
 It exists so admin dashboards and future microservices can inspect
 available agents without importing Python modules.
 """
@@ -24,13 +24,13 @@ class AgentBase(BaseModel):
     icon: str
     category: str
     features: List[str]
-    system_prompt: str
+    agent_type: str = "chat"       # 'chat' | 'integration'
+    service_url: str = ""
+    is_remote: bool = True
+    system_prompt: str = ""
     gemini_config: Dict[str, Any] = Field(default_factory=dict)
     # Quota defaults declared by the agent itself
     quota_config: Dict[str, int] = Field(default_factory=dict)
-    # Whether the agent has its own dedicated database
-    has_own_db: bool = True
-    db_name: str = ""
 
 
 class AgentInDB(AgentBase):

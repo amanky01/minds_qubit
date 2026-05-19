@@ -11,6 +11,22 @@ export interface Agent {
   features: string[];
 }
 
+export interface OpportunitySubscribePayload {
+  email: string;
+  notification_categories: string[];
+  opportunity_types: string[];
+}
+
+export interface OpportunitySubscribeResponse {
+  email: string;
+  status: string;
+  subscriber: Record<string, unknown>;
+}
+
+export interface OpportunityUnsubscribePayload {
+  email: string;
+}
+
 function getDetailFromData(data: unknown): string | undefined {
   if (data == null) return undefined;
   if (typeof data === "string") return data;
@@ -92,6 +108,48 @@ export const agentService = {
       const message = getErrorMessage(error);
       console.error("Error fetching categories:", error);
       throw new Error(message);
+    }
+  },
+
+  async subscribeOpportunityAlert(
+    payload: OpportunitySubscribePayload
+  ): Promise<OpportunitySubscribeResponse> {
+    try {
+      const response = await api.post(
+        "/api/v1/agents/opportunityalert/subscribe",
+        payload
+      );
+      return response.data;
+    } catch (error: unknown) {
+      throw new Error(getErrorMessage(error));
+    }
+  },
+
+  async updateOpportunityAlertSubscription(
+    payload: OpportunitySubscribePayload
+  ): Promise<OpportunitySubscribeResponse> {
+    try {
+      const response = await api.patch(
+        "/api/v1/agents/opportunityalert/subscribe",
+        payload
+      );
+      return response.data;
+    } catch (error: unknown) {
+      throw new Error(getErrorMessage(error));
+    }
+  },
+
+  async unsubscribeOpportunityAlert(
+    payload: OpportunityUnsubscribePayload
+  ): Promise<{ email: string; status: string }> {
+    try {
+      const response = await api.post(
+        "/api/v1/agents/opportunityalert/unsubscribe",
+        payload
+      );
+      return response.data;
+    } catch (error: unknown) {
+      throw new Error(getErrorMessage(error));
     }
   },
 };

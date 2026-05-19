@@ -1,122 +1,80 @@
-# API Integration Setup Guide
+# Frontend API setup (MindsQubit core)
 
-This guide explains how to use the API functions and the clients page that integrates with your FastAPI backend.
+The frontend talks only to the **core API** at `NEXT_PUBLIC_API_BASE_URL` (default `http://127.0.0.1:8000/`).
 
-## Setup
-
-### 1. Backend Setup
-Make sure your FastAPI backend is running on `http://localhost:8000`. The backend should have the following endpoints:
-
-- `GET /clients` - Get all clients
-- `GET /clients/{client_id}` - Get client by ID
-- `GET /sort` - Sort clients by field
-- `POST /create` - Create new client
-- `PUT /edit/{client_id}` - Update client
-- `DELETE /delete/{client_id}` - Delete client
-
-### 2. Environment Configuration
-The API base URL is read from `NEXT_PUBLIC_API_BASE_URL` in `src/network/config/config.js` (default: `http://127.0.0.1:8000/`).
-
-Copy `.env.example` to `.env` and set your backend URL:
+## Environment
 
 ```bash
+# frontend/.env
 NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000/
 ```
 
-For production (e.g. Vercel), set the same variable in your hosting dashboard.
+## HTTP client
 
-## API Functions
+`src/network/core/axiosInstance.js`:
 
-All API functions are available in `src/services/getService.jsx`:
+- Attaches `Authorization: Bearer <access_token>` from `localStorage`
+- On **401**, refreshes via `POST /api/v1/auth/refresh` and retries once
 
-### `getClients()`
-Fetches all clients from the backend.
+## Services
 
-### `getClientById(clientId)`
-Fetches a specific client by ID.
+| File | Purpose |
+| ---- | ------- |
+| `src/services/authService.ts` | Register, login, logout, me, token storage |
+| `src/services/agentService.ts` | List agents, execute chat, OpportunityAlert subscribe |
 
-### `sortClients(sortBy, order)`
-Sorts clients by a specific field. 
-- `sortBy`: Field to sort by (name, age, email)
-- `order`: Sort order ('asc' or 'desc')
+### Example: list agents
 
-### `createClient(clientData)`
-Creates a new client. The `clientData` should include:
-- `id`: Unique identifier
-- `name`: Client name
-- `email`: Client email
-- `age`: Client age (optional)
-- `phone`: Client phone (optional)
+```typescript
+import { agentService } from "@/services/agentService";
 
-### `updateClient(clientId, updateData)`
-Updates an existing client. Only include fields that need to be updated.
+const agents = await agentService.getAllAgents();
+```
 
-### `deleteClient(clientId)`
-Deletes a client by ID.
+### Example: chat (authenticated)
 
-## Usage Example
+```typescript
+import api from "@/network/core/axiosInstance";
 
-```jsx
-import { getClients, createClient } from '../services/getService';
+const { data } = await api.post("/api/v1/agents/codecraft/execute", {
+  message: "Hello",
+  conversation_id: null,
+});
+// data.response, data.conversation_id
+```
 
-// Fetch all clients
-const clients = await getClients();
+### Example: OpportunityAlert subscribe
 
-// Create a new client
-const newClient = await createClient({
-  id: 'client4',
-  name: 'Alice Brown',
-  email: 'alice.brown@example.com',
-  age: 28,
-  phone: '+1-555-0126'
+```typescript
+await agentService.subscribeOpportunityAlert({
+  email: "you@example.com",
+  notification_categories: ["daily_digest"],
+  opportunity_types: ["internship", "job"],
 });
 ```
 
-## Clients Page
+## Core endpoints used by the app
 
-The `src/pages/clients.tsx` page demonstrates all API functions with a modern UI:
+| Feature | Endpoint |
+| ------- | -------- |
+| Register / login | `POST /api/v1/auth/register`, `login` |
+| Current user | `GET /api/v1/auth/me` |
+| Agents list | `GET /api/v1/agents` |
+| Chat | `POST /api/v1/agents/{id}/execute` |
+| Subscriptions | `POST/PATCH /api/v1/agents/opportunityalert/subscribe` |
 
-### Features:
-- **View all clients** in a responsive grid layout
-- **Create new clients** with a modal form
-- **Edit existing clients** with inline editing
-- **Delete clients** with confirmation
-- **Sort clients** by name, age, or email
-- **Responsive design** for mobile and desktop
-
-### Navigation:
-To access the clients page, navigate to `/clients` in your Next.js application.
-
-## Error Handling
-
-All API functions include proper error handling:
-- Network errors are caught and logged
-- User-friendly error messages are displayed
-- Loading states are managed automatically
-
-## Data Structure
-
-The expected client data structure:
-```json
-{
-  "client_id": {
-    "name": "Client Name",
-    "email": "client@example.com",
-    "age": 30,
-    "phone": "+1-555-0123"
-  }
-}
-```
+Full API docs when core is running: `http://localhost:8000/docs`
 
 ## Troubleshooting
 
-1. **CORS Issues**: Ensure your FastAPI backend allows requests from your frontend domain
-2. **Connection Errors**: Verify the backend is running and accessible at the configured URL
-3. **Data Format**: Ensure the backend returns data in the expected format
+| Issue | Check |
+| ----- | ----- |
+| Network error | Core running on `8000`? `NEXT_PUBLIC_API_BASE_URL` correct? |
+| 503 on agent actions | Agent microservices running? `AGENT_*_URL` in core `.env`? |
+| 401 | Log in again; refresh token in `localStorage` |
+| CORS | `CORS_ORIGINS` in `backend/.env` includes frontend origin |
 
-## Next Steps
+## Related
 
-1. Start your FastAPI backend
-2. Navigate to `/clients` in your Next.js app
-3. Test the CRUD operations
-4. Customize the UI and functionality as needed 
+- [README.md](./README.md)
+- [../backend/README.md](../backend/README.md)

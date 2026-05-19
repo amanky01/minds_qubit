@@ -6,6 +6,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { agentService, Agent } from "@/services/agentService";
 import { authService } from "@/services/authService";
 import { agentUIConfig, defaultAgentUIConfig } from "@/config/agentUIConfig";
+import OpportunityAlertSubscription from "@/components/OpportunityAlertSubscription";
 import config from "@/network/config/config";
 import styles from "@/styles/Agent.module.css";
 
@@ -27,6 +28,10 @@ export default function AgentPage() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
+
+  const handleBack = () => {
+    void router.push({ pathname: "/", hash: "agents" });
+  };
 
   const loadAgent = async (agentId: string) => {
     try {
@@ -101,6 +106,7 @@ export default function AgentPage() {
   }
 
   const ui = agentUIConfig[agent.id] || defaultAgentUIConfig;
+  const isSubscription = ui.uiType === "subscription";
 
   return (
     <ProtectedRoute>
@@ -122,7 +128,8 @@ export default function AgentPage() {
 
             {/* Back button */}
             <button
-              onClick={() => router.back()}
+              type="button"
+              onClick={handleBack}
               className={styles.backButton}
               style={{ borderColor: `${ui.accentColor}50`, color: ui.accentColor }}
             >
@@ -189,7 +196,12 @@ export default function AgentPage() {
             />
           </div>
 
-          {/* ══ CHAT ════════════════════════════════════════════ */}
+          {isSubscription ? (
+            <OpportunityAlertSubscription
+              accentColor={ui.accentColor}
+              accentSecondary={ui.accentSecondary}
+            />
+          ) : (
           <div className={styles.chatContainer}>
             <div className={styles.messages}>
 
@@ -267,6 +279,7 @@ export default function AgentPage() {
               </button>
             </form>
           </div>
+          )}
         </div>
       </>
     </ProtectedRoute>

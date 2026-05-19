@@ -35,7 +35,7 @@ from typing import Any, Dict, Optional
 
 from fastapi import HTTPException, status
 
-from agents import get_agent
+from services.agent_catalog import get_agent
 from core.database import db_manager
 
 logger = logging.getLogger(__name__)

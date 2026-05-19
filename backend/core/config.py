@@ -29,15 +29,10 @@ class Settings(BaseSettings):
         default="mongodb://localhost:27017",
         description="MongoDB connection URL",
     )
-    # Central database – users, plans, quotas, audit logs
+    # Central database – users, plans, quotas, audit logs (core accesses this only)
     CENTRAL_DB_NAME: str = Field(
         default="mindsqubit_core",
         description="Name of the central (platform) database",
-    )
-    # Each agent database is named:  {AGENT_DB_PREFIX}{agent_id}
-    AGENT_DB_PREFIX: str = Field(
-        default="mindsqubit_agent_",
-        description="Prefix for per-agent databases",
     )
 
     # ── JWT ────────────────────────────────────────────────────────────────
@@ -48,10 +43,6 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = Field(default="HS256")
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=30)
     JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = Field(default=7)
-
-    # ── Gemini ─────────────────────────────────────────────────────────────
-    GEMINI_API_KEY: str = Field(default="")
-    GEMINI_MODEL: str = Field(default="gemini-1.5-flash")
 
     # ── OAuth ──────────────────────────────────────────────────────────────
     GOOGLE_CLIENT_ID: str = Field(default="")
@@ -64,6 +55,22 @@ class Settings(BaseSettings):
     OAUTH_REDIRECT_URL: str = Field(
         default="http://localhost:8000/api/v1/auth/oauth"
     )
+
+    # ── Agent microservices ───────────────────────────────────────────────
+    AGENT_SERVICE_API_KEY: str = Field(
+        default="",
+        description="Shared secret between core and agent services",
+    )
+    AGENT_GATEWAY_TIMEOUT_SECONDS: float = Field(default=60.0)
+
+    AGENT_CODECRAFT_URL: str = Field(default="http://localhost:8010")
+    AGENT_DATAVIZ_URL: str = Field(default="http://localhost:8011")
+    AGENT_CONTENTCREATOR_URL: str = Field(default="http://localhost:8012")
+    AGENT_DESIGNMASTER_URL: str = Field(default="http://localhost:8013")
+    AGENT_LANGUAGETUTOR_URL: str = Field(default="http://localhost:8014")
+    AGENT_RESEARCHPRO_URL: str = Field(default="http://localhost:8015")
+    AGENT_TECHBLOG_URL: str = Field(default="http://localhost:8016")
+    AGENT_OPPORTUNITYALERT_URL: str = Field(default="http://localhost:8017")
 
     # ── Plans ──────────────────────────────────────────────────────────────
     DEFAULT_PLAN_ID: str = Field(

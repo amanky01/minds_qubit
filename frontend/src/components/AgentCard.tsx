@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
-import type { Agent } from '@/data/aiAgents';
+import type { Agent } from "@/services/agentService";
 import styles from '@/styles/Home.module.css';
 
 interface AgentCardProps {

@@ -25,8 +25,9 @@ export default function Header() {
         </div>
         <nav className={styles.nav}>
           <Link href="/#agents">Agents</Link>
+          {isAuthenticated && <Link href="/dashboard">Dashboard</Link>}
           <Link href="/blog">Tech Blog</Link>
-          <Link href="/#about">About</Link>
+          {!isAuthenticated && <Link href="/#about">About</Link>}
           <Link href="/#contact">Contact</Link>
           <button
             onClick={handleAuthClick}

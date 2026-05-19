@@ -7,7 +7,11 @@
 //  3. That's it — no other file needs to change
 // ─────────────────────────────────────────────────────────────
 
+export type AgentUIType = "chat" | "subscription";
+
 export interface AgentUIConfig {
+    /** chat = message UI; subscription = email preferences (OpportunityAlert) */
+    uiType?: AgentUIType;
     /** Path relative to /public  e.g. "/agents/codecraft.png" */
     bannerImage: string;
     /** Primary accent colour for this agent (hex) */
@@ -85,6 +89,16 @@ export const agentUIConfig: Record<string, AgentUIConfig> = {
         bgGradient: "linear-gradient(135deg, #06020e 0%, #0e0420 50%, #12062a 100%)",
         tagline: "Read · Write · Explore Tech",
         decorativeIcon: "📰",
+    },
+
+    opportunityalert: {
+        uiType: "subscription",
+        bannerImage: "",
+        accentColor: "#22c55e",
+        accentSecondary: "#16a34a",
+        bgGradient: "linear-gradient(135deg, #021408 0%, #04240e 50%, #062e12 100%)",
+        tagline: "Jobs · Internships · Alerts",
+        decorativeIcon: "🔔",
     },
 };
 

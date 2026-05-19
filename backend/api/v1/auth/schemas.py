@@ -27,4 +27,5 @@ class UserResponse(BaseModel):
     id: str
     email: str
     full_name: Optional[str] = None
+    plan_id: str = "free"
     is_active: bool

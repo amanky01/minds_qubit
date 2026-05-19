@@ -1,151 +1,72 @@
-# TheMindSqubit - AI Agents Platform
+# MindsQubit Frontend
 
-A modern, modular website showcasing different AI agents designed to help users accomplish various tasks. Built with Next.js, TypeScript, and modern CSS.
+Next.js app for the MindsQubit platform. All API calls go to the **core gateway** (`NEXT_PUBLIC_API_BASE_URL`), never to agent microservices directly.
 
-## 🚀 Features
+## Features
 
-- **Modern Design**: Beautiful gradient backgrounds with glassmorphism effects
-- **Responsive Layout**: Fully responsive design that works on all devices
-- **Modular Architecture**: Clean, reusable components for easy maintenance
-- **Interactive UI**: Smooth animations and hover effects
-- **Category Filtering**: Filter AI agents by category
-- **6 AI Agents**: Specialized agents for different tasks
+- Agent catalog (loaded from `GET /api/v1/agents`)
+- Per-agent chat UI (`/agent/[id]`)
+- OpportunityAlert subscription UI (`/agent/opportunityalert`)
+- JWT auth (login, register, OAuth callback)
+- Category filtering on the home page
+- **Dashboard** (`/dashboard`) — plan limits and per-agent usage (`GET /api/v1/quota/me`)
+- **Logged-in home** — `/` shows a welcome hero and agents grid for authenticated users; guests see the full marketing page (About section included)
 
-## 🧠 AI Agents
+## Setup
 
-1. **CodeCraft** 💻 - Programming assistant for code generation and debugging
-2. **DataViz** 📊 - Data visualization and analytics
-3. **ContentCreator** ✍️ - Content generation and creative writing
-4. **DesignMaster** 🎨 - Design and visual content creation
-5. **ResearchPro** 🔍 - Research and data analysis
-6. **LanguageTutor** 🌍 - Language learning and practice
-
-## 🏗️ Project Structure
-
-```
-frontend/
-├── src/
-│   ├── components/          # Reusable React components
-│   │   ├── Header.tsx      # Navigation header
-│   │   ├── Hero.tsx        # Hero section with floating icons
-│   │   ├── CategoryFilter.tsx # Category filtering component
-│   │   ├── AgentCard.tsx   # Individual agent card
-│   │   ├── AgentsGrid.tsx  # Grid layout for agents
-│   │   ├── About.tsx       # About section
-│   │   └── Footer.tsx      # Footer component
-│   ├── data/
-│   │   └── aiAgents.ts     # AI agents data and types
-│   ├── pages/
-│   │   └── index.tsx       # Main page component
-│   └── styles/
-│       └── Home.module.css # Styled components
-├── public/                 # Static assets
-└── package.json           # Dependencies and scripts
+```bash
+cd frontend
+cp .env.example .env
+npm install
+npm run dev
 ```
 
-## 🛠️ Technologies Used
+Open `http://localhost:3000`. Ensure **core** (`:8000`) and **agent services** (`:8010–8017`) are running — see [../README.md](../README.md).
 
-- **Next.js 15** - React framework
-- **TypeScript** - Type safety
-- **CSS Modules** - Scoped styling
-- **Modern CSS** - Grid, Flexbox, Animations
-- **Responsive Design** - Mobile-first approach
+## Environment
 
-## 🚀 Getting Started
+| Variable | Example |
+| -------- | ------- |
+| `NEXT_PUBLIC_API_BASE_URL` | `http://127.0.0.1:8000/` |
 
-1. **Install dependencies**:
-   ```bash
-   npm install
-   ```
+Trailing slash is optional; see `src/network/config/config.js`.
 
-2. **Run development server**:
-   ```bash
-   npm run dev
-   ```
+## Project structure
 
-3. **Open your browser**:
-   Navigate to `http://localhost:3000`
+```text
+frontend/src/
+├── components/       # Header, AgentCard, OpportunityAlertSubscription, …
+├── config/
+│   └── agentUIConfig.tsx   # Per-agent visuals; uiType: chat | subscription
+├── contexts/
+│   └── AuthContext.tsx
+├── network/
+│   ├── config/config.js
+│   └── core/axiosInstance.js   # JWT + refresh
+├── pages/
+│   ├── index.tsx
+│   ├── dashboard.tsx
+│   ├── login.tsx
+│   ├── agent/[id].tsx
+│   └── auth/callback.tsx
+├── services/
+│   ├── agentService.ts
+│   ├── authService.ts
+│   └── quotaService.ts
+└── styles/
+```
 
-## 📱 Responsive Design
+## Customizing an agent UI
 
-The website is fully responsive with breakpoints for:
-- **Desktop**: 1200px and above
-- **Tablet**: 768px - 1199px
-- **Mobile**: 480px - 767px
-- **Small Mobile**: Below 480px
+1. Add entry in `src/config/agentUIConfig.tsx` (banner, colors, `uiType`).
+2. For non-chat agents, set `uiType: "subscription"` and wire API methods in `agentService.ts`.
+3. Agent metadata (name, description) comes from the core API — no static list required.
 
-## 🎨 Design Features
+## API integration
 
-- **Gradient Backgrounds**: Beautiful purple-blue gradients
-- **Glassmorphism**: Translucent cards with backdrop blur
-- **Floating Animations**: Animated icons in hero section
-- **Hover Effects**: Interactive buttons and cards
-- **Smooth Transitions**: CSS transitions for better UX
+See [API_SETUP.md](./API_SETUP.md).
 
-## 🔧 Customization
+## Related docs
 
-### Adding New AI Agents
-
-1. Edit `src/data/aiAgents.ts`
-2. Add new agent object with required properties:
-   ```typescript
-   {
-     id: number,
-     name: string,
-     description: string,
-     icon: string,
-     category: string,
-     features: string[]
-   }
-   ```
-
-### Styling
-
-- Main styles: `src/styles/Home.module.css`
-- Component-specific styles are co-located with components
-- Uses CSS custom properties for consistent theming
-
-### Components
-
-Each component is self-contained and reusable:
-- **Header**: Navigation with logo and menu
-- **Hero**: Landing section with call-to-action
-- **CategoryFilter**: Interactive category selection
-- **AgentCard**: Individual agent display
-- **AgentsGrid**: Responsive grid layout
-- **About**: Company information and stats
-- **Footer**: Contact information and links
-
-## 🚀 Deployment
-
-The project is ready for deployment on:
-- **Vercel** (recommended for Next.js)
-- **Netlify**
-- **AWS Amplify**
-- Any static hosting service
-
-## 🔮 Future Enhancements
-
-- [ ] Backend integration for dynamic agent data
-- [ ] User authentication and profiles
-- [ ] Agent interaction interface
-- [ ] Real-time chat with AI agents
-- [ ] Analytics dashboard
-- [ ] Dark/Light theme toggle
-- [ ] Internationalization (i18n)
-
-## 📄 License
-
-This project is licensed under the MIT License.
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
----
-
-Built with ❤️ for TheMindSqubit
+- [../Architecture.md](../Architecture.md)
+- [../backend/README.md](../backend/README.md)
