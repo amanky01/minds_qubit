@@ -1,13 +1,5 @@
 """
-Agents API — aggregates catalog, chat, and per-agent integration routers.
-
-Structure
-─────────
-api/v1/agents/
-  catalog/          GET /agents, /categories, /{agent_id}
-  chat/             POST /agents/{agent_id}/execute, GET .../conversations
-  opportunityalert/ POST/PATCH /agents/opportunityalert/subscribe, ...
-  integrations.py   registry of integration routers (extend when adding agents)
+Agents API — catalog (public) + unified proxy to agent microservices.
 """
 
 from __future__ import annotations
@@ -18,8 +10,7 @@ from fastapi import APIRouter, Depends
 
 from api.v1.agents.catalog import router as catalog_router
 from api.v1.agents.catalog.handlers import list_agents
-from api.v1.agents.chat import router as chat_router
-from api.v1.agents.integrations import INTEGRATION_ROUTERS
+from api.v1.agents.proxy import router as proxy_router
 from api.v1.agents.schemas.catalog import AgentResponse
 from core.dependencies import UserContext, get_optional_current_user
 
@@ -34,9 +25,5 @@ async def list_agents_endpoint(
     return await list_agents(category=category, _user=user)
 
 
-# Fixed-path agent APIs before /{agent_id} catalog routes
-for integration_router in INTEGRATION_ROUTERS:
-    router.include_router(integration_router)
-
+router.include_router(proxy_router)
 router.include_router(catalog_router)
-router.include_router(chat_router)

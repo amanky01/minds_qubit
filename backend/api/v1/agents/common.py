@@ -16,6 +16,7 @@ def agent_to_response(agent: AgentDefinition) -> AgentResponse:
         icon=agent.icon,
         category=agent.category,
         features=agent.features,
+        is_live=agent.is_live,
     )
 
 

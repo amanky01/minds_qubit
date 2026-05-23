@@ -9,6 +9,7 @@ export interface Agent {
   icon: string;
   category: string;
   features: string[];
+  is_live: boolean;
 }
 
 export interface OpportunitySubscribePayload {
@@ -27,12 +28,18 @@ export interface OpportunityUnsubscribePayload {
   email: string;
 }
 
+export type ProxyMethod = "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
+
 function getDetailFromData(data: unknown): string | undefined {
   if (data == null) return undefined;
   if (typeof data === "string") return data;
   if (typeof data === "object" && "detail" in data) {
     const d = (data as { detail: unknown }).detail;
     if (typeof d === "string") return d;
+    if (typeof d === "object" && d !== null && "message" in d) {
+      const m = (d as { message: unknown }).message;
+      if (typeof m === "string") return m;
+    }
   }
   if (typeof data === "object" && "message" in data) {
     const m = (data as { message: unknown }).message;
@@ -58,6 +65,10 @@ const getErrorMessage = (error: unknown): string => {
 
     const status = error.response.status;
     const detail = getDetailFromData(error.response.data);
+
+    if (status === 503) {
+      return detail || "This agent is not available yet.";
+    }
 
     if (status === 500) {
       return "Server error occurred. Please try again later or contact support.";
@@ -111,45 +122,57 @@ export const agentService = {
     }
   },
 
-  async subscribeOpportunityAlert(
-    payload: OpportunitySubscribePayload
-  ): Promise<OpportunitySubscribeResponse> {
+  async proxyAgent<T = unknown>(
+    agentId: string,
+    method: ProxyMethod,
+    path: string,
+    body?: unknown,
+    params?: Record<string, string>
+  ): Promise<T> {
+    const cleanPath = path.replace(/^\//, "");
     try {
-      const response = await api.post(
-        "/api/v1/agents/opportunityalert/subscribe",
-        payload
-      );
+      const response = await api.request<T>({
+        method,
+        url: `/api/v1/agents/${agentId}/proxy/${cleanPath}`,
+        data: body,
+        params,
+      });
       return response.data;
     } catch (error: unknown) {
       throw new Error(getErrorMessage(error));
     }
+  },
+
+  async subscribeOpportunityAlert(
+    payload: OpportunitySubscribePayload
+  ): Promise<OpportunitySubscribeResponse> {
+    return agentService.proxyAgent<OpportunitySubscribeResponse>(
+      "opportunityalert",
+      "POST",
+      "v1/subscribe",
+      payload
+    );
   },
 
   async updateOpportunityAlertSubscription(
     payload: OpportunitySubscribePayload
   ): Promise<OpportunitySubscribeResponse> {
-    try {
-      const response = await api.patch(
-        "/api/v1/agents/opportunityalert/subscribe",
-        payload
-      );
-      return response.data;
-    } catch (error: unknown) {
-      throw new Error(getErrorMessage(error));
-    }
+    return agentService.proxyAgent<OpportunitySubscribeResponse>(
+      "opportunityalert",
+      "PATCH",
+      "v1/subscribe",
+      payload
+    );
   },
 
   async unsubscribeOpportunityAlert(
     payload: OpportunityUnsubscribePayload
   ): Promise<{ email: string; status: string }> {
-    try {
-      const response = await api.post(
-        "/api/v1/agents/opportunityalert/unsubscribe",
-        payload
-      );
-      return response.data;
-    } catch (error: unknown) {
-      throw new Error(getErrorMessage(error));
-    }
+    return agentService.proxyAgent<{ email: string; status: string }>(
+      "opportunityalert",
+      "POST",
+      "v1/unsubscribe",
+      payload
+    );
   },
 };

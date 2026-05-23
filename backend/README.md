@@ -59,14 +59,10 @@ Docker (full stack): `docker compose up` from repo root.
 
 | Method | Path | Auth |
 | ------ | ---- | ---- |
-| GET | `/api/v1/agents` | Public |
+| GET | `/api/v1/agents` | Public (includes `is_live`) |
 | GET | `/api/v1/agents/categories` | Public |
 | GET | `/api/v1/agents/{agent_id}` | Public |
-| POST | `/api/v1/agents/{agent_id}/execute` | Bearer |
-| GET | `/api/v1/agents/{agent_id}/conversations` | Bearer |
-| POST | `/api/v1/agents/opportunityalert/subscribe` | Bearer |
-| PATCH | `/api/v1/agents/opportunityalert/subscribe` | Bearer |
-| POST | `/api/v1/agents/opportunityalert/unsubscribe` | Bearer |
+| GET/POST/PATCH/PUT/DELETE | `/api/v1/agents/{agent_id}/proxy/{path}` | Bearer (live agents only) |
 
 ### Auth
 
@@ -102,8 +98,8 @@ See [../Schema.md](../Schema.md).
 1. Create `services/agents/<id>/` (copy `codecraft` or `_template`) — see [services/agents/README.md](../services/agents/README.md).
 2. Add to `services/agent_catalog.py` and `AGENT_<ID>_URL` in `.env`.
 3. Register in `docker-compose.yml` and `scripts/start-agent-services.sh`.
-4. **Chat agents:** no core API changes (use shared `api/v1/agents/chat/` routes).
-5. **Integration agents** (custom APIs): add `api/v1/agents/<id>/` and register in `api/v1/agents/integrations.py` — see [api/v1/agents/README.md](api/v1/agents/README.md).
+4. Set `is_live=True` in `agent_catalog.py` when the service is ready for users.
+5. Core routes all agent calls via the generic proxy — see [api/v1/agents/README.md](api/v1/agents/README.md).
 6. Restart core to sync `agent_registry`.
 
 ## Deploy on Render (core only)

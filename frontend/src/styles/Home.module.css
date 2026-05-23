@@ -560,6 +560,20 @@
   border-color: var(--primary);
 }
 
+.comingSoonTag {
+  display: inline-block;
+  margin-bottom: 0.5rem;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #fbbf24;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.25rem 0.6rem;
+  border-radius: 20px;
+}
+
 .agentButton {
   background: var(--gradient-primary);
   color: var(--background);

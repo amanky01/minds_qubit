@@ -11,24 +11,26 @@ interface AgentCardProps {
 export default function AgentCard({ agent, onClick }: AgentCardProps) {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
+  const isLive = agent.is_live ?? false;
 
   const handleTryAgent = (e: React.MouseEvent) => {
     e.stopPropagation();
-    
+
     if (!isAuthenticated) {
       router.push(`/login?redirect=${encodeURIComponent(`/agent/${agent.id}`)}`);
       return;
     }
-    
+
     router.push(`/agent/${agent.id}`);
   };
 
   return (
-    <div 
+    <div
       className={styles.agentCard}
       onClick={() => onClick(agent)}
     >
       <div className={styles.agentIcon}>{agent.icon}</div>
+      {!isLive && <span className={styles.comingSoonTag}>Coming soon</span>}
       <h3>{agent.name}</h3>
       <p>{agent.description}</p>
       <div className={styles.agentCategory}>{agent.category}</div>
@@ -39,12 +41,12 @@ export default function AgentCard({ agent, onClick }: AgentCardProps) {
           </span>
         ))}
       </div>
-      <button 
+      <button
         className={styles.agentButton}
         onClick={handleTryAgent}
       >
-        Try Agent
+        {isLive ? "Try Agent" : "Coming soon"}
       </button>
     </div>
   );
-} 
+}

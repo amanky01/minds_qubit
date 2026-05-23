@@ -1,14 +1,6 @@
 import styles from '@/styles/Home.module.css';
+import type { Agent } from '@/services/agentService';
 import AgentCard from './AgentCard';
-
-interface Agent {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-  category: string;
-  features: string[];
-}
 
 interface AgentsGridProps {
   agents: Agent[];

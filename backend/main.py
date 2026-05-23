@@ -105,6 +105,10 @@ async def root():
 async def health():
     return {"status": "ok"}
 
+@app.head("/health", tags=["meta"])
+async def health_head():
+    return {"status": "ok"}
+
 
 if __name__ == "__main__":
     import uvicorn

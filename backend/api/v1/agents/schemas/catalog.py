@@ -12,5 +12,6 @@ class AgentResponse(BaseModel):
     icon: str
     category: str
     features: List[str]
+    is_live: bool = False
 
     model_config = {"from_attributes": True}

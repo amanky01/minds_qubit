@@ -5,7 +5,7 @@ HTTP gateway from MindsQubit core to agent microservices.
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import httpx
 from fastapi import HTTPException, status
@@ -45,30 +45,39 @@ class AgentGateway:
             )
         return agent
 
-    async def execute(
+    @staticmethod
+    def _normalize_path(path: str) -> str:
+        clean = path.lstrip("/")
+        if ".." in clean.split("/"):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid proxy path",
+            )
+        return clean
+
+    async def forward(
         self,
         agent_id: str,
+        method: str,
+        path: str,
         user_id: str,
         email: str,
         plan_id: str,
-        message: str,
-        conversation_id: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        json_body: Optional[dict] = None,
+        query_params: Optional[Dict[str, str]] = None,
+    ) -> Any:
+        """Forward an HTTP request to the agent microservice."""
         agent = self._agent(agent_id)
-        if agent.agent_type != "chat":
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Agent '{agent_id}' does not support chat execution",
-            )
-
-        url = f"{agent.service_url.rstrip('/')}/v1/execute"
-        payload = {"message": message, "conversation_id": conversation_id}
+        rel_path = self._normalize_path(path)
+        url = f"{agent.service_url.rstrip('/')}/{rel_path}"
 
         try:
             async with httpx.AsyncClient(timeout=REQUEST_TIMEOUT) as client:
-                response = await client.post(
+                response = await client.request(
+                    method.upper(),
                     url,
-                    json=payload,
+                    json=json_body if method.upper() != "GET" else None,
+                    params=query_params,
                     headers=self._headers(user_id, email, plan_id),
                 )
         except httpx.RequestError as exc:
@@ -83,78 +92,13 @@ class AgentGateway:
             code = response.status_code if response.status_code < 500 else 503
             raise HTTPException(status_code=code, detail=detail)
 
-        data = response.json()
-        return {
-            "response": data["response"],
-            "conversation_id": data["conversation_id"],
-            "agent_id": data.get("agent_id", agent_id),
-        }
-
-    async def get_user_conversations(
-        self,
-        agent_id: str,
-        user_id: str,
-        email: str,
-        plan_id: str,
-    ) -> List[dict]:
-        agent = self._agent(agent_id)
-        if agent.agent_type != "chat":
-            return []
-
-        url = f"{agent.service_url.rstrip('/')}/v1/conversations"
-        try:
-            async with httpx.AsyncClient(timeout=REQUEST_TIMEOUT) as client:
-                response = await client.get(
-                    url,
-                    params={"user_id": user_id},
-                    headers=self._headers(user_id, email, plan_id),
-                )
-        except httpx.RequestError as exc:
-            logger.error("Agent service unreachable agent=%s: %s", agent_id, exc)
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail=f"Agent service '{agent_id}' is unavailable",
-            ) from exc
-
-        if response.status_code >= 400:
-            detail = self._extract_detail(response)
-            raise HTTPException(status_code=response.status_code, detail=detail)
-
-        return response.json()
-
-    async def proxy_integration(
-        self,
-        agent_id: str,
-        method: str,
-        path: str,
-        user_id: str,
-        email: str,
-        plan_id: str,
-        json_body: Optional[dict] = None,
-    ) -> Any:
-        agent = self._agent(agent_id)
-        url = f"{agent.service_url.rstrip('/')}{path}"
+        if not response.content:
+            return {}
 
         try:
-            async with httpx.AsyncClient(timeout=REQUEST_TIMEOUT) as client:
-                response = await client.request(
-                    method,
-                    url,
-                    json=json_body,
-                    headers=self._headers(user_id, email, plan_id),
-                )
-        except httpx.RequestError as exc:
-            logger.error("Agent service unreachable agent=%s: %s", agent_id, exc)
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail=f"Agent service '{agent_id}' is unavailable",
-            ) from exc
-
-        if response.status_code >= 400:
-            detail = self._extract_detail(response)
-            raise HTTPException(status_code=response.status_code, detail=detail)
-
-        return response.json()
+            return response.json()
+        except Exception:  # noqa: BLE001
+            return {"raw": response.text}
 
     @staticmethod
     def _extract_detail(response: httpx.Response) -> Any:

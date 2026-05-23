@@ -31,6 +31,7 @@ class AgentBase(BaseModel):
     gemini_config: Dict[str, Any] = Field(default_factory=dict)
     # Quota defaults declared by the agent itself
     quota_config: Dict[str, int] = Field(default_factory=dict)
+    is_live: bool = False
 
 
 class AgentInDB(AgentBase):

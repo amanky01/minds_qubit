@@ -36,6 +36,7 @@ class AgentDefinition:
         }
     )
     is_remote: bool = True
+    is_live: bool = False
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -51,6 +52,7 @@ class AgentDefinition:
             "gemini_config": self.gemini_config,
             "quota_config": self.quota_config,
             "is_remote": self.is_remote,
+            "is_live": self.is_live,
             "is_active": True,
         }
 
@@ -245,6 +247,7 @@ AGENT_CATALOG: List[AgentDefinition] = [
         agent_type="integration",
         service_url=settings.AGENT_OPPORTUNITYALERT_URL,
         system_prompt="",
+        is_live=True,
     ),
 ]
 

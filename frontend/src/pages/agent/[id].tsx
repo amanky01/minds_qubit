@@ -3,12 +3,17 @@ import { useRouter } from "next/router";
 import Head from "next/head";
 import { useAuth } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import AgentComingSoon from "@/components/AgentComingSoon";
 import { agentService, Agent } from "@/services/agentService";
-import { authService } from "@/services/authService";
 import { agentUIConfig, defaultAgentUIConfig } from "@/config/agentUIConfig";
 import OpportunityAlertSubscription from "@/components/OpportunityAlertSubscription";
-import config from "@/network/config/config";
 import styles from "@/styles/Agent.module.css";
+
+interface ExecuteResponse {
+  response: string;
+  conversation_id: string;
+  agent_id: string;
+}
 
 export default function AgentPage() {
   const router = useRouter();
@@ -44,7 +49,7 @@ export default function AgentPage() {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim() || !agent || !isAuthenticated) return;
+    if (!message.trim() || !agent || !isAuthenticated || !agent.is_live) return;
 
     const userMessage = message.trim();
     setMessage("");
@@ -52,40 +57,22 @@ export default function AgentPage() {
     setLoading(true);
 
     try {
-      const token = authService.getAccessToken();
-      if (!token) throw new Error("Not authenticated");
-
-      const response = await fetch(
-        `${config.API_BASE_URL}api/v1/agents/${agent.id}/execute`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ message: userMessage, conversation_id: conversationId }),
-        }
+      const data = await agentService.proxyAgent<ExecuteResponse>(
+        agent.id,
+        "POST",
+        "v1/execute",
+        { message: userMessage, conversation_id: conversationId }
       );
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        if (response.status === 500) throw new Error("Server error. Please try again later.");
-        throw new Error(errorData.detail || `Error: ${response.status} ${response.statusText}`);
-      }
-
-      const data = await response.json();
       if (data.response) {
         setMessages((prev) => [...prev, { role: "assistant", content: data.response }]);
         if (data.conversation_id) setConversationId(data.conversation_id);
       }
     } catch (error: unknown) {
-      let errorMessage = "Sorry, I encountered an error. Please try again.";
-      const msg = error instanceof Error ? error.message : "";
-      if (msg.includes("Failed to fetch") || msg.includes("Network Error")) {
-        errorMessage = "Unable to connect to the server. Please ensure the backend is running.";
-      } else if (msg) {
-        errorMessage = msg;
-      }
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Sorry, I encountered an error. Please try again.";
       setMessages((prev) => [...prev, { role: "assistant", content: errorMessage }]);
     } finally {
       setLoading(false);
@@ -108,6 +95,105 @@ export default function AgentPage() {
   const ui = agentUIConfig[agent.id] || defaultAgentUIConfig;
   const isSubscription = ui.uiType === "subscription";
 
+  const renderAgentBody = () => {
+    if (!agent.is_live) {
+      return (
+        <AgentComingSoon
+          agentName={agent.name}
+          agentIcon={agent.icon}
+          accentColor={ui.accentColor}
+        />
+      );
+    }
+
+    if (isSubscription) {
+      return (
+        <OpportunityAlertSubscription
+          accentColor={ui.accentColor}
+          accentSecondary={ui.accentSecondary}
+        />
+      );
+    }
+
+    return (
+      <div className={styles.chatContainer}>
+        <div className={styles.messages}>
+          {messages.length === 0 ? (
+            <div className={styles.welcomeMessage}>
+              <div className={styles.welcomeIcon} style={{ color: ui.accentColor }}>
+                {agent.icon}
+              </div>
+              <p className={styles.welcomeTitle} style={{ color: ui.accentColor }}>
+                Start a conversation with {agent.name}!
+              </p>
+              <p className={styles.welcomeSubtext}>{agent.description}</p>
+            </div>
+          ) : (
+            messages.map((msg, index) => (
+              <div
+                key={index}
+                className={`${styles.message} ${
+                  msg.role === "user" ? styles.userMessage : styles.assistantMessage
+                }`}
+              >
+                <div
+                  className={styles.messageContent}
+                  style={
+                    msg.role === "user"
+                      ? {
+                          background: `linear-gradient(135deg, ${ui.accentColor}, ${ui.accentSecondary})`,
+                        }
+                      : {}
+                  }
+                >
+                  {msg.content}
+                </div>
+              </div>
+            ))
+          )}
+
+          {loading && (
+            <div className={`${styles.message} ${styles.assistantMessage}`}>
+              <div className={styles.messageContent}>
+                <div className={styles.typingDots}>
+                  <span style={{ background: ui.accentColor }} />
+                  <span style={{ background: ui.accentColor }} />
+                  <span style={{ background: ui.accentColor }} />
+                </div>
+              </div>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+
+        <form
+          onSubmit={handleSendMessage}
+          className={styles.inputForm}
+          style={{ borderColor: `${ui.accentColor}30` }}
+        >
+          <input
+            type="text"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder={`Message ${agent.name}...`}
+            className={styles.messageInput}
+            disabled={loading}
+          />
+          <button
+            type="submit"
+            className={styles.sendButton}
+            disabled={loading || !message.trim()}
+            style={{
+              background: `linear-gradient(135deg, ${ui.accentColor}, ${ui.accentSecondary})`,
+            }}
+          >
+            {loading ? "···" : "Send ➤"}
+          </button>
+        </form>
+      </div>
+    );
+  };
+
   return (
     <ProtectedRoute>
       <>
@@ -117,16 +203,11 @@ export default function AgentPage() {
         </Head>
 
         <div className={styles.container}>
-
-          {/* ══ BANNER ══════════════════════════════════════════ */}
           <div className={styles.banner} style={{ background: ui.bgGradient }}>
-
-            {/* Floating decorative icons */}
             <span className={`${styles.floatIcon} ${styles.fi1}`}>{ui.decorativeIcon}</span>
             <span className={`${styles.floatIcon} ${styles.fi2}`}>{agent.icon}</span>
             <span className={`${styles.floatIcon} ${styles.fi3}`}>{ui.decorativeIcon}</span>
 
-            {/* Back button */}
             <button
               type="button"
               onClick={handleBack}
@@ -136,10 +217,7 @@ export default function AgentPage() {
               ← Back
             </button>
 
-            {/* Agent identity row */}
             <div className={styles.agentIdentity}>
-
-              {/* Banner image – hidden gracefully if file missing */}
               <div
                 className={styles.bannerImageWrap}
                 style={{ boxShadow: `0 0 40px ${ui.accentColor}40` }}
@@ -159,16 +237,17 @@ export default function AgentPage() {
                 )}
               </div>
 
-              {/* Text info */}
               <div className={styles.agentMeta}>
                 <span className={styles.categoryBadge}>{agent.category}</span>
+                {!agent.is_live && (
+                  <span className={styles.comingSoonBadge}>Coming soon</span>
+                )}
                 <h1 className={styles.agentName} style={{ color: ui.accentColor }}>
                   {agent.name}
                 </h1>
                 <p className={styles.agentTagline}>{ui.tagline}</p>
                 <p className={styles.agentDescription}>{agent.description}</p>
 
-                {/* Feature pills */}
                 <div className={styles.featurePills}>
                   {agent.features.map((f, i) => (
                     <span
@@ -187,7 +266,6 @@ export default function AgentPage() {
               </div>
             </div>
 
-            {/* Bottom glow line */}
             <div
               className={styles.bannerGlow}
               style={{
@@ -196,90 +274,7 @@ export default function AgentPage() {
             />
           </div>
 
-          {isSubscription ? (
-            <OpportunityAlertSubscription
-              accentColor={ui.accentColor}
-              accentSecondary={ui.accentSecondary}
-            />
-          ) : (
-          <div className={styles.chatContainer}>
-            <div className={styles.messages}>
-
-              {messages.length === 0 ? (
-                <div className={styles.welcomeMessage}>
-                  <div className={styles.welcomeIcon} style={{ color: ui.accentColor }}>
-                    {agent.icon}
-                  </div>
-                  <p className={styles.welcomeTitle} style={{ color: ui.accentColor }}>
-                    Start a conversation with {agent.name}!
-                  </p>
-                  <p className={styles.welcomeSubtext}>{agent.description}</p>
-                </div>
-              ) : (
-                messages.map((msg, index) => (
-                  <div
-                    key={index}
-                    className={`${styles.message} ${msg.role === "user" ? styles.userMessage : styles.assistantMessage
-                      }`}
-                  >
-                    <div
-                      className={styles.messageContent}
-                      style={
-                        msg.role === "user"
-                          ? {
-                            background: `linear-gradient(135deg, ${ui.accentColor}, ${ui.accentSecondary})`,
-                          }
-                          : {}
-                      }
-                    >
-                      {msg.content}
-                    </div>
-                  </div>
-                ))
-              )}
-
-              {/* Typing indicator */}
-              {loading && (
-                <div className={`${styles.message} ${styles.assistantMessage}`}>
-                  <div className={styles.messageContent}>
-                    <div className={styles.typingDots}>
-                      <span style={{ background: ui.accentColor }} />
-                      <span style={{ background: ui.accentColor }} />
-                      <span style={{ background: ui.accentColor }} />
-                    </div>
-                  </div>
-                </div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Input */}
-            <form
-              onSubmit={handleSendMessage}
-              className={styles.inputForm}
-              style={{ borderColor: `${ui.accentColor}30` }}
-            >
-              <input
-                type="text"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder={`Message ${agent.name}...`}
-                className={styles.messageInput}
-                disabled={loading}
-              />
-              <button
-                type="submit"
-                className={styles.sendButton}
-                disabled={loading || !message.trim()}
-                style={{
-                  background: `linear-gradient(135deg, ${ui.accentColor}, ${ui.accentSecondary})`,
-                }}
-              >
-                {loading ? "···" : "Send ➤"}
-              </button>
-            </form>
-          </div>
-          )}
+          {renderAgentBody()}
         </div>
       </>
     </ProtectedRoute>
