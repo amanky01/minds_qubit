@@ -17,7 +17,6 @@ services:
       CENTRAL_DB_NAME: mindsqubit_core
       JWT_SECRET_KEY: dev_secret_change_in_production
       CORS_ORIGINS: http://localhost:3000
-      AGENT_SERVICE_API_KEY: dev_agent_service_key
       AGENT_CODECRAFT_URL: http://codecraft:8010
       AGENT_DATAVIZ_URL: http://dataviz:8011
       AGENT_CONTENTCREATOR_URL: http://contentcreator:8012
@@ -47,7 +46,6 @@ services:
       AGENT_ID: codecraft
       PORT: "8010"
       MONGODB_URL: mongodb://mongodb:27017
-      AGENT_SERVICE_API_KEY: dev_agent_service_key
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     depends_on:
       - mongodb
@@ -65,7 +63,6 @@ services:
       AGENT_ID: dataviz
       PORT: "8011"
       MONGODB_URL: mongodb://mongodb:27017
-      AGENT_SERVICE_API_KEY: dev_agent_service_key
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     depends_on:
       - mongodb
@@ -83,7 +80,6 @@ services:
       AGENT_ID: contentcreator
       PORT: "8012"
       MONGODB_URL: mongodb://mongodb:27017
-      AGENT_SERVICE_API_KEY: dev_agent_service_key
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     depends_on:
       - mongodb
@@ -101,7 +97,6 @@ services:
       AGENT_ID: designmaster
       PORT: "8013"
       MONGODB_URL: mongodb://mongodb:27017
-      AGENT_SERVICE_API_KEY: dev_agent_service_key
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     depends_on:
       - mongodb
@@ -119,7 +114,6 @@ services:
       AGENT_ID: languagetutor
       PORT: "8014"
       MONGODB_URL: mongodb://mongodb:27017
-      AGENT_SERVICE_API_KEY: dev_agent_service_key
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     depends_on:
       - mongodb
@@ -137,7 +131,6 @@ services:
       AGENT_ID: researchpro
       PORT: "8015"
       MONGODB_URL: mongodb://mongodb:27017
-      AGENT_SERVICE_API_KEY: dev_agent_service_key
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     depends_on:
       - mongodb
@@ -155,7 +148,6 @@ services:
       AGENT_ID: techblog
       PORT: "8016"
       MONGODB_URL: mongodb://mongodb:27017
-      AGENT_SERVICE_API_KEY: dev_agent_service_key
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     depends_on:
       - mongodb
@@ -167,7 +159,6 @@ services:
     ports:
       - "8017:8017"
     environment:
-      AGENT_SERVICE_API_KEY: dev_agent_service_key
       OPPORTUNITY_CRAWLER_URL: https://opportunity-crawler.onrender.com
       PORT: "8017"
 

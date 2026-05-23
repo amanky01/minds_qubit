@@ -22,7 +22,7 @@ PATCH /api/v1/agents/opportunityalert/proxy/v1/subscribe
 GET /api/v1/agents/codecraft/proxy/v1/conversations?user_id=...
 ```
 
-Core forwards to `{agent.service_url}/{path}` with service headers (`X-Service-Key`, `X-User-Id`, etc.).
+Core forwards to `{agent.service_url}/{path}` with user context headers (`X-User-Id`, `X-User-Email`, `X-Plan-Id`).
 
 - **503** if `is_live` is false on the agent in [`agent_catalog.py`](../../../services/agent_catalog.py)
 - **Quota** checked before POST / PATCH / PUT; usage recorded after successful POST

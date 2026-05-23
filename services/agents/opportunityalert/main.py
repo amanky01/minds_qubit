@@ -8,12 +8,7 @@ from fastapi import Depends, FastAPI, Header, HTTPException, status
 from pydantic import BaseModel, EmailStr, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from agent_contract.headers import (
-    HEADER_PLAN_ID,
-    HEADER_SERVICE_KEY,
-    HEADER_USER_EMAIL,
-    HEADER_USER_ID,
-)
+from agent_contract.headers import HEADER_PLAN_ID, HEADER_USER_EMAIL, HEADER_USER_ID
 from agent_contract.schemas import SubscribeRequest, SubscribeResponse, UnsubscribeRequest
 
 ALLOWED_NOTIFICATION_CATEGORIES = {"daily_digest", "instant_alert"}
@@ -23,7 +18,6 @@ ALLOWED_OPPORTUNITY_TYPES = {"internship", "job", "hackathon", "research", "all"
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    AGENT_SERVICE_API_KEY: str = ""
     OPPORTUNITY_CRAWLER_URL: str = "https://opportunity-crawler.onrender.com"
     HOST: str = "0.0.0.0"
     PORT: int = 8017
@@ -33,14 +27,10 @@ settings = Settings()
 
 
 def require_service(
-    x_service_key: Optional[str] = Header(None, alias=HEADER_SERVICE_KEY),
     x_user_id: Optional[str] = Header(None, alias=HEADER_USER_ID),
     x_user_email: Optional[str] = Header(None, alias=HEADER_USER_EMAIL),
     x_plan_id: Optional[str] = Header(None, alias=HEADER_PLAN_ID),
 ) -> dict:
-    if settings.AGENT_SERVICE_API_KEY:
-        if not x_service_key or x_service_key != settings.AGENT_SERVICE_API_KEY:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid service key")
     if not x_user_id:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Missing user context")
     return {

@@ -3,7 +3,6 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 export PYTHONPATH="${ROOT}/services/agents/_shared:${PYTHONPATH:-}"
-export AGENT_SERVICE_API_KEY="${AGENT_SERVICE_API_KEY:-dev_agent_service_key}"
 export MONGODB_URL="${MONGODB_URL:-mongodb://localhost:27017}"
 export GEMINI_API_KEY="${GEMINI_API_KEY:?Set GEMINI_API_KEY}"
 

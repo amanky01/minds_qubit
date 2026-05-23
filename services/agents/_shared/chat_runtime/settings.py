@@ -10,7 +10,6 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     AGENT_ID: str
-    AGENT_SERVICE_API_KEY: str = ""
     MONGODB_URL: str = "mongodb://localhost:27017"
     AGENT_DB_PREFIX: str = "mindsqubit_agent_"
     GEMINI_API_KEY: str = ""

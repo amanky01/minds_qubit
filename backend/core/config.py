@@ -57,10 +57,6 @@ class Settings(BaseSettings):
     )
 
     # ── Agent microservices ───────────────────────────────────────────────
-    AGENT_SERVICE_API_KEY: str = Field(
-        default="",
-        description="Shared secret between core and agent services",
-    )
     AGENT_GATEWAY_TIMEOUT_SECONDS: float = Field(default=60.0)
 
     AGENT_CODECRAFT_URL: str = Field(default="http://localhost:8010")

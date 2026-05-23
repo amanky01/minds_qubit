@@ -23,7 +23,6 @@ services/agents/
 | `MONGODB_URL` | MongoDB cluster |
 | `AGENT_DB_PREFIX` | Default `mindsqubit_agent_` → DB `mindsqubit_agent_<id>` |
 | `GEMINI_API_KEY` | Required for chat |
-| `AGENT_SERVICE_API_KEY` | Must match core |
 
 **Endpoints (internal):**
 
@@ -33,7 +32,7 @@ services/agents/
 
 ## OpportunityAlert
 
-**Env:** `OPPORTUNITY_CRAWLER_URL`, `AGENT_SERVICE_API_KEY`, `PORT=8017`
+**Env:** `OPPORTUNITY_CRAWLER_URL`, `PORT=8017`
 
 **Endpoints:** `POST/PATCH /v1/subscribe`, `POST /v1/unsubscribe` → upstream crawler.
 
@@ -45,7 +44,7 @@ No Gemini, no agent MongoDB.
 pip install -e ../../packages/agent-contract
 pip install -r _shared/requirements.txt
 cd codecraft
-export AGENT_ID=codecraft PORT=8010 GEMINI_API_KEY=... AGENT_SERVICE_API_KEY=...
+export AGENT_ID=codecraft PORT=8010 GEMINI_API_KEY=...
 uvicorn main:app --reload --port 8010
 ```
 

@@ -26,11 +26,10 @@ Details: [Architecture.md](./Architecture.md) · DB schema: [Schema.md](./Schema
 ```bash
 # 1. Core
 cd backend && cp .env.example .env && pip install -r requirements.txt
-# Edit .env (JWT_SECRET_KEY, AGENT_SERVICE_API_KEY, agent URLs)
+# Edit .env (JWT_SECRET_KEY, AGENT_*_URL for each agent)
 
 # 2. Agent services (from repo root)
 export GEMINI_API_KEY=your_key
-export AGENT_SERVICE_API_KEY=dev_agent_service_key  # match backend .env
 ./scripts/start-agent-services.sh
 
 # 3. Core server

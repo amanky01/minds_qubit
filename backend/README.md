@@ -19,14 +19,13 @@ pip install -r requirements.txt
 
 ```bash
 cp .env.example .env
-# Set: JWT_SECRET_KEY, AGENT_SERVICE_API_KEY, AGENT_*_URL for each agent
+# Set: JWT_SECRET_KEY, AGENT_*_URL for each agent
 ```
 
 3. **Start agent microservices** (from repo root, before or with core):
 
 ```bash
 export GEMINI_API_KEY=your_key
-export AGENT_SERVICE_API_KEY=dev_agent_service_key   # same value in backend/.env
 ./scripts/start-agent-services.sh
 ```
 

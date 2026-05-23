@@ -1,9 +1,4 @@
-from agent_contract.headers import (
-    HEADER_PLAN_ID,
-    HEADER_SERVICE_KEY,
-    HEADER_USER_EMAIL,
-    HEADER_USER_ID,
-)
+from agent_contract.headers import HEADER_PLAN_ID, HEADER_USER_EMAIL, HEADER_USER_ID
 from agent_contract.schemas import (
     ConversationListItem,
     ConversationMessageOut,
@@ -15,7 +10,6 @@ from agent_contract.schemas import (
 )
 
 __all__ = [
-    "HEADER_SERVICE_KEY",
     "HEADER_USER_ID",
     "HEADER_USER_EMAIL",
     "HEADER_PLAN_ID",

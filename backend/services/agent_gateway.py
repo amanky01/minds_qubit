@@ -15,7 +15,6 @@ from services.agent_catalog import AgentDefinition, get_agent
 
 logger = logging.getLogger(__name__)
 
-HEADER_SERVICE_KEY = "X-Service-Key"
 HEADER_USER_ID = "X-User-Id"
 HEADER_USER_EMAIL = "X-User-Email"
 HEADER_PLAN_ID = "X-Plan-Id"
@@ -30,8 +29,6 @@ class AgentGateway:
             HEADER_USER_EMAIL: email or "",
             HEADER_PLAN_ID: plan_id or "free",
         }
-        if settings.AGENT_SERVICE_API_KEY:
-            headers[HEADER_SERVICE_KEY] = settings.AGENT_SERVICE_API_KEY
         return headers
 
     def _agent(self, agent_id: str) -> AgentDefinition:

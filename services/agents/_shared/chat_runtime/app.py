@@ -5,12 +5,7 @@ from typing import List, Optional
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query, status
 
-from agent_contract.headers import (
-    HEADER_PLAN_ID,
-    HEADER_SERVICE_KEY,
-    HEADER_USER_EMAIL,
-    HEADER_USER_ID,
-)
+from agent_contract.headers import HEADER_PLAN_ID, HEADER_USER_EMAIL, HEADER_USER_ID
 from agent_contract.schemas import ConversationListItem, ExecuteRequest, ExecuteResponse
 
 from chat_runtime.agent_config import ChatAgentConfig
@@ -32,14 +27,11 @@ def create_chat_app(agent_config: ChatAgentConfig) -> FastAPI:
     )
 
     def require_user(
-        x_service_key: Optional[str] = Header(None, alias=HEADER_SERVICE_KEY),
         x_user_id: Optional[str] = Header(None, alias=HEADER_USER_ID),
         x_user_email: Optional[str] = Header(None, alias=HEADER_USER_EMAIL),
         x_plan_id: Optional[str] = Header(None, alias=HEADER_PLAN_ID),
     ) -> ServiceUserContext:
-        return verify_service_request(
-            settings, x_service_key, x_user_id, x_user_email, x_plan_id
-        )
+        return verify_service_request(x_user_id, x_user_email, x_plan_id)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
