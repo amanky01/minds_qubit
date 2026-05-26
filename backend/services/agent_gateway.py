@@ -68,6 +68,14 @@ class AgentGateway:
         rel_path = self._normalize_path(path)
         url = f"{agent.service_url.rstrip('/')}/{rel_path}"
 
+        logger.info(
+            "Agent gateway forward agent=%s %s %s (configured base=%s)",
+            agent_id,
+            method.upper(),
+            url,
+            agent.service_url,
+        )
+
         try:
             async with httpx.AsyncClient(timeout=REQUEST_TIMEOUT) as client:
                 response = await client.request(
@@ -78,11 +86,32 @@ class AgentGateway:
                     headers=self._headers(user_id, email, plan_id),
                 )
         except httpx.RequestError as exc:
-            logger.error("Agent service unreachable agent=%s: %s", agent_id, exc)
+            logger.error(
+                "Agent service unreachable agent=%s url=%s error=%s",
+                agent_id,
+                url,
+                exc,
+            )
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail=f"Agent service '{agent_id}' is unavailable",
+                detail={
+                    "message": f"Agent service '{agent_id}' is unavailable",
+                    "upstream_url": url,
+                    "hint": (
+                        "Core calls your opportunityalert microservice (AGENT_OPPORTUNITYALERT_URL), "
+                        "not the Opportunity Crawler directly. Deploy opportunityalert on Render and "
+                        "point AGENT_OPPORTUNITYALERT_URL to that service URL."
+                    ),
+                },
             ) from exc
+
+        logger.info(
+            "Agent gateway response agent=%s %s %s -> HTTP %s",
+            agent_id,
+            method.upper(),
+            url,
+            response.status_code,
+        )
 
         if response.status_code >= 400:
             detail = self._extract_detail(response)

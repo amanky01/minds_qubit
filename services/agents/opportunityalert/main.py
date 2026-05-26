@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 from typing import List, Optional
 
@@ -24,6 +25,7 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+logger = logging.getLogger(__name__)
 
 
 def require_service(
@@ -58,8 +60,10 @@ def _validate_subscribe(body: SubscribeRequest) -> None:
 async def _proxy(method: str, path: str, json_body: dict) -> dict:
     base = settings.OPPORTUNITY_CRAWLER_URL.rstrip("/")
     url = f"{base}{path}"
+    logger.info("OpportunityAlert -> crawler %s %s", method.upper(), url)
     async with httpx.AsyncClient(timeout=30.0) as client:
         response = await client.request(method, url, json=json_body)
+    logger.info("OpportunityAlert <- crawler %s %s -> HTTP %s", method.upper(), url, response.status_code)
     if response.status_code >= 400:
         detail = response.text
         try:
