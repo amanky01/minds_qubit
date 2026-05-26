@@ -149,7 +149,7 @@ export const agentService = {
     return agentService.proxyAgent<OpportunitySubscribeResponse>(
       "opportunityalert",
       "POST",
-      "v1/subscribe",
+      "subscribe",
       payload
     );
   },
@@ -160,7 +160,7 @@ export const agentService = {
     return agentService.proxyAgent<OpportunitySubscribeResponse>(
       "opportunityalert",
       "PATCH",
-      "v1/subscribe",
+      "subscribe",
       payload
     );
   },
@@ -171,7 +171,7 @@ export const agentService = {
     return agentService.proxyAgent<{ email: string; status: string }>(
       "opportunityalert",
       "POST",
-      "v1/unsubscribe",
+      "subscribe/unsubscribe",
       payload
     );
   },

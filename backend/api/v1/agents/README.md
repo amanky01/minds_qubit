@@ -18,7 +18,7 @@ Authenticated clients call:
 
 ```http
 POST /api/v1/agents/{agent_id}/proxy/v1/execute
-PATCH /api/v1/agents/opportunityalert/proxy/v1/subscribe
+PATCH /api/v1/agents/opportunityalert/proxy/subscribe
 GET /api/v1/agents/codecraft/proxy/v1/conversations?user_id=...
 ```
 
@@ -45,4 +45,4 @@ No per-agent core router folder is required — the proxy handles all agents uni
 | Agent | Proxy path | Upstream |
 |-------|------------|----------|
 | codecraft | `POST .../proxy/v1/execute` | `{CODECRAFT_URL}/v1/execute` |
-| opportunityalert | `POST .../proxy/v1/subscribe` | `{OPP_URL}/v1/subscribe` |
+| opportunityalert | `POST .../proxy/subscribe` | `{OPP_URL}/subscribe` → crawler `/subscribe` |

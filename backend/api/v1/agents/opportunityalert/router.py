@@ -7,7 +7,7 @@ Production frontends call:
   POST   /api/v1/agents/opportunityalert/unsubscribe
 
 New clients may also use the generic proxy:
-  POST /api/v1/agents/opportunityalert/proxy/v1/subscribe
+  POST /api/v1/agents/opportunityalert/proxy/subscribe
 """
 
 from __future__ import annotations
@@ -105,7 +105,7 @@ async def unsubscribe(
     return await agent_gateway.forward(
         agent_id=AGENT_ID,
         method="POST",
-        path="/unsubscribe",
+        path="subscribe/unsubscribe",
         user_id=user["user_id"],
         email=user["email"],
         plan_id=user["plan_id"],

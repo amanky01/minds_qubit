@@ -46,7 +46,7 @@ const data = await agentService.proxyAgent(
 );
 
 // OpportunityAlert subscribe
-await agentService.proxyAgent("opportunityalert", "POST", "v1/subscribe", {
+await agentService.proxyAgent("opportunityalert", "POST", "subscribe", {
   email: "you@example.com",
   notification_categories: ["daily_digest"],
   opportunity_types: ["internship", "job"],
