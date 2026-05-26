@@ -58,7 +58,7 @@ async def subscribe(
     result = await agent_gateway.forward(
         agent_id=AGENT_ID,
         method="POST",
-        path="v1/subscribe",
+        path="/subscribe",
         user_id=user["user_id"],
         email=user["email"],
         plan_id=user["plan_id"],
@@ -85,7 +85,7 @@ async def update_subscription(
     result = await agent_gateway.forward(
         agent_id=AGENT_ID,
         method="PATCH",
-        path="v1/subscribe",
+        path="/subscribe",
         user_id=user["user_id"],
         email=user["email"],
         plan_id=user["plan_id"],
@@ -105,7 +105,7 @@ async def unsubscribe(
     return await agent_gateway.forward(
         agent_id=AGENT_ID,
         method="POST",
-        path="v1/unsubscribe",
+        path="/unsubscribe",
         user_id=user["user_id"],
         email=user["email"],
         plan_id=user["plan_id"],
